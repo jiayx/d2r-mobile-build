@@ -5,6 +5,12 @@
 .release-assets/
 upstream/
 outputs/
+.fast-payload/
+.fast-rewrite/
+.fast-shaders/
+.mac-pack-input/
+.mac-pack-tools/
+.rewrite-work/
 __pycache__/
 *.keys
 *.nsp

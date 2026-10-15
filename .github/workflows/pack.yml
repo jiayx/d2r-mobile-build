@@ -44,6 +44,14 @@ jobs:
   pack:
     runs-on: ubuntu-24.04
     timeout-minutes: 360
+    outputs:
+      bundle: ${{ steps.ipas.outputs.bundle }}
+      payload_key: ${{ steps.fast-key.outputs.key }}
+      rewrite_key: ${{ steps.fast-key.outputs.rewrite_key }}
+      shader_key: ${{ steps.shader-key.outputs.shaders }}
+      source_commit: ${{ steps.fast-key.outputs.source_commit }}
+      tools_commit: ${{ steps.fast-key.outputs.tools_commit }}
+      sdk: ${{ steps.cache-keys.outputs.sdk }}
     env:
       SOURCE_BUILD: ${{ inputs.native_build && '1' || '0' }}
       SOURCE_REPOSITORY: ${{ inputs.source_repository || 'jhaizhou-ops/d2r-mobile' }}
@@ -74,7 +82,37 @@ jobs:
       - name: Record selected source and apply local test patches
         if: inputs.native_build
         run: python scripts/source/configure.py
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - name: Compute portable payload and rewrite identities
+        id: fast-key
+        if: ${{ !inputs.prepare_only && !inputs.native_build }}
+        run: python scripts/fast_pack.py keys
+      - name: Restore the complete verified shell payload
+        id: fast-payload
+        if: ${{ !inputs.prepare_only && !inputs.native_build }}
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830
+        with:
+          path: .fast-payload
+          key: shell-payload-v1-${{ steps.fast-key.outputs.key }}
+      - name: Verify reusable payload and resource metadata
+        id: fast-check
+        if: ${{ !inputs.prepare_only && !inputs.native_build }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PUBLISH_RELEASE: ${{ inputs.publish_release }}
+        run: python scripts/fast_pack.py check
+      - name: Check retained original downloads without transferring them
+        if: steps.fast-check.outputs.reused == 'true'
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830
+        with:
+          path: .game-downloads
+          key: downloads-${{ runner.os }}-${{ inputs.input_revision }}
+          lookup-only: true
       - name: Make room for game extraction on the disposable runner
+        if: ${{ steps.fast-check.outputs.needs_game != 'false' }}
         run: |
           # Only remove unrelated preinstalled SDKs on GitHub's temporary VM.
           sudo rm -rf /usr/local/lib/android /usr/share/swift /usr/local/.ghcup /opt/ghc
@@ -86,29 +124,32 @@ jobs:
           if free < 28:
               raise SystemExit('Insufficient disk space: game extraction needs at least 28 GiB free')
           PYCODE
-      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
-        with:
-          python-version: '3.12'
-          cache: pip
       - uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4
+        if: ${{ steps.fast-check.outputs.needs_game != 'false' }}
         with:
           dotnet-version: '10.0.x'
       - name: Install compiler and archive tools
+        if: ${{ steps.fast-check.outputs.needs_game != 'false' }}
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y --no-install-recommends clang cmake ninja-build p7zip-full p7zip-rar aria2 fonts-dejavu-core libjpeg-dev zlib1g-dev libfreetype6-dev libraqm-dev
           python -m pip install -r requirements.txt
           df -h "$GITHUB_WORKSPACE"
       - name: Compute dependency cache keys
+        if: ${{ steps.fast-check.outputs.needs_game != 'false' }}
         id: cache-keys
-        run: python scripts/cache_keys.py
+        run: |
+          python scripts/cache_keys.py
+          echo "sdk=$(dotnet --version)" >> "$GITHUB_OUTPUT"
       - name: Restore build tools
+        if: ${{ steps.fast-check.outputs.needs_game != 'false' }}
         id: tools
         uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
           path: .tools
           key: tools-v2-${{ runner.os }}-${{ runner.arch }}-${{ steps.cache-keys.outputs.tools }}
       - name: Restore generated build cache
+        if: ${{ steps.fast-check.outputs.reused != 'true' }}
         id: generated
         uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
@@ -121,14 +162,17 @@ jobs:
           restore-keys: |
             generated-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('build-config.json', 'requirements.txt', 'scripts/tools.sh', 'scripts/png_backend.sh') }}-${{ inputs.input_revision }}-
       - name: Build and verify toolchain
+        if: ${{ steps.fast-check.outputs.needs_game != 'false' }}
         run: |
           bash scripts/tools.sh
           python upstream/dm/gfx/tools/nometal_run.py upstream/dm/gfx/tools/dmsh_chain.py --header
           echo "$GITHUB_WORKSPACE/.tools/bin" >> "$GITHUB_PATH"
       - name: Compute verified shader cache key
+        if: ${{ steps.fast-check.outputs.reused != 'true' }}
         id: shader-key
         run: python scripts/cache_keys.py shaders
       - name: Restore matching shader outputs
+        if: ${{ steps.fast-check.outputs.reused != 'true' }}
         id: shaders
         uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830
         with:
@@ -138,12 +182,14 @@ jobs:
             .dm-work/build/ios/dmsh_b
           key: shaders-v3-${{ runner.os }}-${{ runner.arch }}-${{ steps.shader-key.outputs.shaders }}
       - name: Restore PNG compression backend
+        if: ${{ steps.fast-check.outputs.reused != 'true' }}
         id: png
         uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830
         with:
           path: .tools/png-zlib-ng-2.3.2
           key: png-backend-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('scripts/png_backend.sh') }}
       - name: Pin the verified PNG compression backend
+        if: ${{ steps.fast-check.outputs.reused != 'true' }}
         run: |
           bash scripts/png_backend.sh
           LD_PRELOAD="$GITHUB_WORKSPACE/.tools/png-zlib-ng-2.3.2/lib/libz.so.1" python - <<'PY'
@@ -152,44 +198,44 @@ jobs:
           print('Verified PNG compressor:', features.version('zlib'))
           PY
       - name: Save PNG compression backend
-        if: steps.png.outputs.cache-hit != 'true'
+        if: ${{ (steps.png.outputs.cache-hit != 'true') && (steps.fast-check.outputs.reused != 'true') }}
         uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830
         with:
           path: .tools/png-zlib-ng-2.3.2
           key: ${{ steps.png.outputs.cache-primary-key }}
       - name: Save verified build tools
-        if: steps.tools.outputs.cache-hit != 'true'
+        if: ${{ (steps.tools.outputs.cache-hit != 'true') && (steps.fast-check.outputs.needs_game != 'false') }}
         uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
           path: .tools
           key: ${{ steps.tools.outputs.cache-primary-key }}
       - name: Restore verified game files
-        if: ${{ !inputs.prepare_only }}
+        if: ${{ (!inputs.prepare_only) && (steps.fast-check.outputs.needs_game != 'false') }}
         id: game
         uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
           path: .dm-work/data/switch/3.3.94012/Update
           key: game-${{ runner.os }}-${{ hashFiles('build-config.json') }}-${{ inputs.input_revision }}
       - name: Restore complete original downloads
-        if: ${{ !inputs.prepare_only && steps.game.outputs.cache-hit != 'true' }}
+        if: ${{ (!inputs.prepare_only && steps.game.outputs.cache-hit != 'true') && (steps.fast-check.outputs.needs_game != 'false') }}
         id: downloads
         uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
           path: .game-downloads
           key: downloads-${{ runner.os }}-${{ inputs.input_revision }}
       - name: Download game packages without decrypting
-        if: ${{ !inputs.prepare_only }}
+        if: ${{ (!inputs.prepare_only) && (steps.fast-check.outputs.needs_game != 'false') }}
         env:
           GAME_INPUT_MANIFEST: ${{ secrets.GAME_INPUT_MANIFEST }}
         run: python scripts/ci.py downloads
       - name: Cache complete downloads BEFORE extraction
-        if: ${{ !inputs.prepare_only && steps.game.outputs.cache-hit != 'true' && steps.downloads.outputs.cache-hit != 'true' }}
+        if: ${{ (!inputs.prepare_only && steps.game.outputs.cache-hit != 'true' && steps.downloads.outputs.cache-hit != 'true') && (steps.fast-check.outputs.needs_game != 'false') }}
         uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
           path: .game-downloads
           key: ${{ steps.downloads.outputs.cache-primary-key }}
       - name: Confirm original downloads are stored before extraction
-        if: ${{ !inputs.prepare_only && steps.game.outputs.cache-hit != 'true' }}
+        if: ${{ (!inputs.prepare_only && steps.game.outputs.cache-hit != 'true') && (steps.fast-check.outputs.needs_game != 'false') }}
         uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
           path: .game-downloads
@@ -197,34 +243,53 @@ jobs:
           lookup-only: true
           fail-on-cache-miss: true
       - name: Decrypt, extract and verify cached game inputs
-        if: ${{ !inputs.prepare_only }}
+        if: ${{ (!inputs.prepare_only) && (steps.fast-check.outputs.needs_game != 'false') }}
         env:
           GAME_INPUT_MANIFEST: ${{ secrets.GAME_INPUT_MANIFEST }}
           PROD_KEYS: ${{ secrets.PROD_KEYS }}
         run: python scripts/ci.py inputs
       - name: Verify frozen PNG hashes
-        if: ${{ !inputs.prepare_only }}
+        if: ${{ (!inputs.prepare_only) && (steps.fast-check.outputs.reused != 'true') }}
         run: |
           export LD_PRELOAD="$GITHUB_WORKSPACE/.tools/png-zlib-ng-2.3.2/lib/libz.so.1"
           mkdir -p outputs
           python -u scripts/png_preflight.py
       - name: Generate or reuse matching Legacy Device Pack
-        if: ${{ !inputs.prepare_only }}
+        if: ${{ (!inputs.prepare_only) && (steps.fast-check.outputs.reused != 'true') }}
         env:
           GH_TOKEN: ${{ github.token }}
         run: python -u scripts/legacy_pack.py
+      - name: Reuse matching Data or publish it once
+        if: ${{ !inputs.prepare_only && inputs.publish_release && !inputs.native_build }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python -u scripts/publish_release.py prepare-resources
       - name: Generate both unsigned IPA variants
         id: ipas
         if: ${{ !inputs.prepare_only }}
+        env:
+          SHADER_KEY: ${{ steps.shader-key.outputs.shaders }}
         run: |
-          export LD_PRELOAD="$GITHUB_WORKSPACE/.tools/png-zlib-ng-2.3.2/lib/libz.so.1"
           if [[ "$SOURCE_BUILD" == 1 ]]; then
+            export LD_PRELOAD="$GITHUB_WORKSPACE/.tools/png-zlib-ng-2.3.2/lib/libz.so.1"
             python -u scripts/source/prepare.py
+          elif [[ "${{ steps.fast-check.outputs.reused }}" == true ]]; then
+            python -u scripts/fast_pack.py assemble
           else
-            python -u scripts/build_ipas.py
+            export LD_PRELOAD="$GITHUB_WORKSPACE/.tools/png-zlib-ng-2.3.2/lib/libz.so.1"
+            python -u scripts/fast_pack.py prepare
           fi
+      - name: Upload compact macOS build inputs
+        if: steps.ipas.outputs.bundle == 'true'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: mac-pack-inputs
+          path: outputs/mac-pack-inputs.tar.gz
+          compression-level: 0
+          retention-days: 1
+          if-no-files-found: error
       - name: Save generated build cache
-        if: success() && steps.generated.outputs.cache-hit != 'true'
+        if: ${{ (success() && steps.generated.outputs.cache-hit != 'true') && (inputs.native_build || inputs.prepare_only) }}
         uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
           path: |
@@ -234,7 +299,7 @@ jobs:
             upstream/dm/ios/Sources/dm_touch_native_art.c
           key: ${{ steps.generated.outputs.cache-primary-key }}
       - name: Save verified shader outputs
-        if: success() && !inputs.prepare_only && steps.shaders.outputs.cache-hit != 'true'
+        if: ${{ (success() && !inputs.prepare_only && steps.shaders.outputs.cache-hit != 'true') && (inputs.native_build || inputs.prepare_only) }}
         uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830
         with:
           path: |
@@ -242,11 +307,6 @@ jobs:
             .dm-work/build/cache/metal_shader_cache
             .dm-work/build/ios/dmsh_b
           key: ${{ steps.shaders.outputs.cache-primary-key }}
-      - name: Reuse matching Data or publish it once
-        if: ${{ !inputs.prepare_only && inputs.publish_release && !inputs.native_build }}
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: python -u scripts/publish_release.py prepare-resources
       - name: Upload native source build inputs
         if: inputs.native_build && !inputs.prepare_only
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
@@ -261,7 +321,7 @@ jobs:
           retention-days: 3
           compression-level: 0
       - name: Upload IPA and verification report
-        if: ${{ !inputs.prepare_only && !inputs.native_build }}
+        if: ${{ (!inputs.prepare_only && !inputs.native_build) && (steps.fast-check.outputs.reused == 'true') }}
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: D2RMobile-${{ steps.ipas.outputs.version }}-${{ github.run_number }}
@@ -277,7 +337,7 @@ jobs:
           retention-days: 3
           compression-level: 0
       - name: Automatically publish IPA with matching Data links
-        if: ${{ !inputs.prepare_only && inputs.publish_release && !inputs.native_build }}
+        if: ${{ (!inputs.prepare_only && inputs.publish_release && !inputs.native_build) && (steps.fast-check.outputs.reused == 'true') }}
         env:
           GH_TOKEN: ${{ github.token }}
         run: python -u scripts/publish_release.py ipa
@@ -310,6 +370,7 @@ jobs:
           SHADER_CACHE_HIT: ${{ steps.shaders.outputs.cache-hit }}
           PUBLISH_RELEASE: ${{ inputs.publish_release }}
           SOURCE_BUILD: ${{ inputs.native_build }}
+          MAC_BUNDLE: ${{ steps.ipas.outputs.bundle }}
         run: |
           python - <<'PY'
           import os
@@ -318,6 +379,8 @@ jobs:
                   f.write('Toolchain verified and cached. **No game IPA was built in this preparation run.**\n')
               elif os.environ['SOURCE_BUILD'] == 'true':
                   f.write('Matching game payload and native source inputs verified; macOS compiles the App next.\n')
+              elif os.environ['MAC_BUNDLE'] == 'true':
+                  f.write('Verified compact inputs prepared; macOS finishes rewriting and shader translation.\n')
               else:
                   f.write('Unsigned IPA built and verified; see the artifact and build-report.json.\n')
                   f.write('Game cache hit: ' + os.environ['GAME_CACHE_HIT'] + '\n\n')
@@ -326,3 +389,124 @@ jobs:
                   f.write('Shader cache hit: ' + os.environ['SHADER_CACHE_HIT'] + '\n\n')
                   f.write('Release publication enabled: ' + os.environ['PUBLISH_RELEASE'] + '\n')
           PY
+  mac-pack:
+    needs: pack
+    if: ${{ !cancelled() && needs.pack.result == 'success' && needs.pack.outputs.bundle == 'true' }}
+    runs-on: macos-26
+    timeout-minutes: 90
+    env:
+      DM_ROOT: ${{ github.workspace }}/.dm-work
+      INPUT_REVISION: ${{ inputs.input_revision }}
+      D2RM_NO_METAL: '1'
+      PYTHONUTF8: '1'
+      J: '4'
+      GH_TOKEN: ${{ github.token }}
+      DOTNET_CLI_TELEMETRY_OPTOUT: '1'
+      DOTNET_NOLOGO: '1'
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ needs.pack.outputs.tools_commit }}
+          persist-credentials: false
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: ${{ inputs.source_repository || 'jhaizhou-ops/d2r-mobile' }}
+          ref: ${{ needs.pack.outputs.source_commit }}
+          path: upstream
+          persist-credentials: false
+      - name: Verify Apple silicon runner
+        run: test "$(uname -m)" = arm64
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+          cache: pip
+      - name: Install matching runtime dependencies
+        run: python -m pip install -r requirements.txt
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: mac-pack-inputs
+          path: outputs
+      - name: Restore portable rewritten modules
+        id: rewrite-cache
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830
+        with:
+          path: .fast-rewrite
+          key: mac-rewrite-v1-${{ needs.pack.outputs.rewrite_key }}
+      - name: Restore verified translated shader outputs
+        id: shader-cache
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830
+        with:
+          path: .fast-shaders
+          key: mac-shaders-v1-${{ needs.pack.outputs.shader_key }}
+      - name: Verify transported files and select cached generation stages
+        id: inspect
+        run: python scripts/fast_pack.py inspect
+      - uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9
+        if: steps.inspect.outputs.needs_shaders == 'true'
+        with:
+          dotnet-version: ${{ needs.pack.outputs.sdk }}
+      - name: Restore Mac translation tools
+        if: steps.inspect.outputs.needs_shaders == 'true'
+        id: mac-tools
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830
+        with:
+          path: .mac-pack-tools
+          key: mac-pack-tools-v1-${{ runner.arch }}-${{ needs.pack.outputs.sdk }}-${{ hashFiles('build-config.json', 'scripts/fast_pack.py') }}
+      - name: Prepare the native shader tool compiler
+        if: steps.inspect.outputs.needs_shaders == 'true'
+        run: |
+          command -v cmake >/dev/null || brew install cmake
+          command -v ninja >/dev/null || brew install ninja
+      - name: Generate missing modules and shaders, then verify both IPAs
+        id: finish
+        run: python -u scripts/fast_pack.py finish
+      - name: Reserve capacity for existing original downloads
+        id: cache-budget
+        env:
+          SAVE_PAYLOAD: 'true'
+          SAVE_REWRITE: ${{ steps.rewrite-cache.outputs.cache-hit != 'true' }}
+          SAVE_SHADERS: ${{ steps.finish.outputs.shader_reused != 'true' && steps.shader-cache.outputs.cache-hit != 'true' }}
+          SAVE_TOOLS: ${{ steps.inspect.outputs.needs_shaders == 'true' && steps.mac-tools.outputs.cache-hit != 'true' }}
+        run: python scripts/cache_budget.py
+      - name: Cache complete verified rewritten modules
+        if: success() && steps.cache-budget.outputs.rewrite == 'true'
+        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830
+        with:
+          path: .fast-rewrite
+          key: ${{ steps.rewrite-cache.outputs.cache-primary-key }}
+      - name: Cache complete verified Mac shader outputs
+        if: success() && steps.cache-budget.outputs.shaders == 'true'
+        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830
+        with:
+          path: .fast-shaders
+          key: ${{ steps.shader-cache.outputs.cache-primary-key }}
+      - name: Cache verified Mac translation tools
+        if: success() && steps.cache-budget.outputs.tools == 'true'
+        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830
+        with:
+          path: .mac-pack-tools
+          key: ${{ steps.mac-tools.outputs.cache-primary-key }}
+      - name: Cache the complete verified portable payload
+        if: success() && steps.cache-budget.outputs.payload == 'true'
+        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830
+        with:
+          path: .fast-payload
+          key: shell-payload-v1-${{ needs.pack.outputs.payload_key }}
+      - name: Upload IPA and verification report
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: D2RMobile-${{ steps.finish.outputs.version }}-${{ github.run_number }}
+          path: |
+            outputs/D2RMobile-*.ipa
+            outputs/legacy-resources.json
+            outputs/build-report.json
+            outputs/SHA256SUMS.txt
+            outputs/resource-manifest.json
+            outputs/resources.json
+            outputs/RESOURCE-INSTALL.txt
+          if-no-files-found: error
+          retention-days: 3
+          compression-level: 0
+      - name: Automatically publish IPA with existing Data and Legacy links
+        if: inputs.publish_release
+        run: python -u scripts/publish_release.py ipa

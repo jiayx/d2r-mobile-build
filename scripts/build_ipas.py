@@ -63,7 +63,7 @@ def reuse_payload(source, source_shell, target_shell, destination):
     print('Reused generated payload:', len(additions), 'members;', Path(destination).name, flush=True)
 
 
-def main():
+def main(first_built=None):
     output = ci.ROOT / 'outputs'
     output.mkdir(exist_ok=True)
     pack = Path(os.environ['D2RM_ASTC_PACK'])
@@ -75,8 +75,11 @@ def main():
         if ci.sha256(shell_path) != ci.CONFIG['shell_sha256' if minimum == '26.0' else 'ios18_shell_sha256']:
             raise ValueError('Official shell SHA256 mismatch: ' + shell)
         if first is None:
-            subprocess.run([sys.executable, str(ci.ROOT / 'upstream/dm/tools/d2rm_pack.py'),
-                            str(shell_path), str(ci.GAME), str(output / name)], check=True)
+            if first_built is None:
+                subprocess.run([sys.executable, str(ci.ROOT / 'upstream/dm/tools/d2rm_pack.py'),
+                                str(shell_path), str(ci.GAME), str(output / name)], check=True)
+            elif Path(first_built).resolve() != (output / name).resolve():
+                raise ValueError('Prebuilt first IPA has an unexpected path')
         else:
             reuse_payload(first[0], first[1], shell_path, output / name)
         report = ci.verify_ipa(output / name, shell_path, minimum, pack)
