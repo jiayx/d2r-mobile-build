@@ -10,14 +10,12 @@ from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).parents[1] / 'scripts'))
 import tvos
+import tvos_inputs
+import io
+import zipfile
 
 
 class TVBuildTests(unittest.TestCase):
-    def test_missing_original_input_fails_before_download(self):
-        with patch.dict(os.environ, {'GAME_ARCHIVE': ''}):
-            with self.assertRaisesRegex(ValueError, 'Configure GAME_ARCHIVE'):
-                tvos.plan()
-
     def test_reject_other_platform_and_missing_runtime_data(self):
         with tempfile.TemporaryDirectory() as temporary:
             app = Path(temporary)
@@ -43,3 +41,19 @@ class TVBuildTests(unittest.TestCase):
             (app / 'embedded.mobileprovision').write_text('unexpected profile')
             with self.assertRaisesRegex(ValueError, 'provisioning profile'):
                 tvos.verify_app(app, config)
+
+class SplitArchiveTests(unittest.TestCase):
+    def test_zip_reads_across_part_boundaries(self):
+        stream = io.BytesIO()
+        with zipfile.ZipFile(stream, 'w', zipfile.ZIP_DEFLATED) as z:
+            z.writestr('data/test', b'original shader' * 200)
+        data = stream.getvalue()
+        with tempfile.TemporaryDirectory() as directory:
+            paths = []
+            for i, part in enumerate((data[:21], data[21:87], data[87:])):
+                p = Path(directory) / str(i); p.write_bytes(part); paths.append(p)
+            with zipfile.ZipFile(tvos_inputs.SplitReader(paths)) as z:
+                self.assertEqual(z.read('data/test'), b'original shader' * 200)
+            with zipfile.ZipFile(tvos_inputs.SplitReader(paths[::-1])) as z:
+                with self.assertRaises(Exception):
+                    z.read('data/test')

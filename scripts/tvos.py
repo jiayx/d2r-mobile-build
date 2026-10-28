@@ -1,5 +1,7 @@
 """Experimental tvOS packaging through upstream's device build entry point."""
 import json
+import hashlib
+import shutil
 import os
 from pathlib import Path
 import plistlib
@@ -10,16 +12,15 @@ import zipfile
 import ci
 from archive_input import extract
 from input_config import input_identity, settings
-from source import game_input, prepared
+from source import prepared
+import macos
+import tvos_inputs
 from source.publish import gh, release_info, upload_verified
 
 
 def plan():
-    if not os.environ.get('GAME_ARCHIVE', '').strip():
-        raise ValueError('Configure GAME_ARCHIVE with the original ExeFS/RomFS archive JSON. '
-                         'Existing iOS/Mac prepared packages do not contain tvOS shader sources.')
-    url, digest = settings('GAME_ARCHIVE')
-    identity = input_identity(url, digest)
+    data = tvos_inputs.configuration()
+    identity = hashlib.sha256(data['sha256'].encode()).hexdigest()
     with open(os.environ['GITHUB_OUTPUT'], 'a') as out:
         out.write('input_revision=' + identity + '\n')
 
@@ -57,24 +58,45 @@ def build():
     root = ci.ROOT
     dm = root / 'upstream/dm'
     work = root / '.tvos-work'
-    game = game_input.unpack(work)
+    macos.import_prepared()
+    mac = root / '.macos-prepared'
+    mac_info = macos.load_prepared()
     inputs = root / '.tvos-ios-input'
     extract(root / '.prepared-downloads/prepared-input.archive', inputs)
     info = prepared.verify_directory(inputs)
     if info['nso_sha256'] != ci.CONFIG['nso_sha256']:
         raise ValueError('Legacy metadata belongs to different game programs')
     # Only Legacy pack metadata is reused; Apple binary libraries are NOT retargeted.
-    environment = dict(os.environ, DM_ROOT=str(work), DM_ROMFS_SRC=str(game / 'RomFS'),
+    environment = dict(os.environ, DM_ROOT=str(work),
                        DM_ASTC_PACK=str(inputs / 'legacy'), DM_TV_NOSIGN='1',
                        DM_TEAM_ID='0000000000', DM_BUNDLE_ID='org.d2rmobile.app')
-    subprocess.run(['bash', str(root / 'upstream/setup.sh')], env=environment, check=True)
-    python_dir = work / 'build/cache/dm/venv/bin'
-    environment['PATH'] = str(python_dir) + os.pathsep + environment['PATH']
+    paths = tvos_inputs.download()
+    romfs, packs = tvos_inputs.extract_shader_packs(dm, mac, work, paths, environment)
+    environment['DM_ROMFS_SRC'] = str(romfs)
+    product = work / 'build/cache/dm/out' / (mac_info['product'] + '-touch')
+    shutil.copytree(mac / 'product', product, dirs_exist_ok=True)
+    environment['DM_OUT'] = str(product)
+    translator = work / 'build/gfx/dmsh_xlate'
+    subprocess.run(['dotnet', 'publish', str(dm / 'gfx/tools/dmsh_xlate'), '-c', 'Release',
+                    '-o', str(translator), '-v', 'quiet'], env=environment, check=True)
+    for flag in ('--update-lock', '--header'):
+        subprocess.run([sys.executable, str(dm / 'gfx/tools/dmsh_chain.py'), flag],
+                       env=environment, check=True)
+    shader_cache = work / 'build/cache/metal_shader_cache'
+    environment['IOSOUT'] = str(work / 'build/ios/dmsh_b')
+    subprocess.run([sys.executable, str(root / 'scripts/tvos_inputs.py'), 'translate',
+                    str(dm), str(product), str(packs), str(shader_cache)], env=environment, check=True)
+    chain = subprocess.check_output([sys.executable, str(dm / 'gfx/tools/dmsh_chain.py')],
+                                    env=environment, text=True).strip()
+    subprocess.run([sys.executable, str(dm / 'gfx/tools/c1_guard.py'),
+                    str(shader_cache / ('b-' + chain)), str(dm / 'gfx/nvn/c1_full.tsv')],
+                   env=environment, check=True)
+    python_dir = Path(sys.executable).parent
     configure_project(dm / 'ios/project.yml', ci.CONFIG)
     subprocess.run(['bash', str(dm / 'tvos/build.sh')], env=environment, check=True)
     overlay = work / 'tv-overlay/romfs_overlay'
     subprocess.run([str(python_dir / 'python3'), str(dm / 'tvos/gen_romfs_overlay.py'),
-                    str(game / 'RomFS'), str(overlay)], env=environment, check=True)
+                    str(romfs), str(overlay)], env=environment, check=True)
     astc = overlay.with_name('romfs_overlay_astc')
     if not (astc / 'data/.build.config').is_file() or not (astc / 'pack.json').is_file():
         raise ValueError('Required TV Legacy overlay was not generated')
@@ -142,7 +164,7 @@ def publish():
 
 if __name__ == '__main__':
     try:
-        {'plan': plan, 'download': game_input.download, 'build': build, 'publish': publish}[sys.argv[1]]()
+        {'plan': plan, 'download': tvos_inputs.download, 'build': build, 'publish': publish}[sys.argv[1]]()
     except Exception as exc:
         # Downloader exceptions can contain private URLs.
         message = str(exc) if isinstance(exc, ValueError) else type(exc).__name__

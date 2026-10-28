@@ -2,6 +2,15 @@ name: Reusable experimental tvOS build
 on:
   workflow_call:
     inputs:
+      macos_input:
+        type: string
+        required: true
+      data_input:
+        type: string
+        required: true
+      publish:
+        type: boolean
+        default: true
       prepared_input:
         description: iOS prepared JSON for matching Legacy pack metadata
         type: string
@@ -13,8 +22,6 @@ on:
         type: string
         default: ''
     secrets:
-      GAME_ARCHIVE:
-        required: true
       SOURCE_TOKEN:
         required: false
 permissions:
@@ -29,6 +36,7 @@ jobs:
     runs-on: macos-26
     timeout-minutes: 120
     env:
+      DATA_INPUT: ${{ inputs.data_input }}
       SOURCE_REPOSITORY: ${{ inputs.source_repository }}
       GH_TOKEN: ${{ github.token }}
       HOMEBREW_NO_AUTO_UPDATE: '1'
@@ -76,30 +84,26 @@ jobs:
           cache-dependency-path: requirements.txt
       - name: Install the archive downloader
         run: python -m pip install -r requirements.txt
-      - name: Validate original game input configuration
+      - name: Validate Data input configuration
         id: game
-        env:
-          GAME_ARCHIVE: ${{ secrets.GAME_ARCHIVE }}
         run: python scripts/tvos.py plan
-      - name: Restore original game archive
+      - name: Restore Data archive parts
         id: archive
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
         with:
-          path: .game-downloads
-          key: input-archive-v1-${{ steps.game.outputs.input_revision }}
-      - name: Verify or download original game archive
-        env:
-          GAME_ARCHIVE: ${{ secrets.GAME_ARCHIVE }}
+          path: .tvos-data-downloads
+          key: tvos-data-v1-${{ steps.game.outputs.input_revision }}
+      - name: Verify or download Data archive parts
         run: python scripts/tvos.py download
       - name: Check archive cache space
         id: budget
         if: steps.archive.outputs.cache-hit != 'true'
-        run: python scripts/cache_budget.py .game-downloads archive
-      - name: Preserve original archive
+        run: python scripts/cache_budget.py .tvos-data-downloads archive
+      - name: Preserve Data archive parts
         if: steps.budget.outputs.archive == 'true'
         uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
         with:
-          path: .game-downloads
+          path: .tvos-data-downloads
           key: ${{ steps.archive.outputs.cache-primary-key }}
       - name: Resolve iOS prepared input for Legacy metadata
         id: input
@@ -115,12 +119,26 @@ jobs:
         env:
           PREPARED_INPUT: ${{ inputs.prepared_input }}
         run: python scripts/source/prepared.py download
+      - name: Resolve Mac prepared input
+        id: macinput
+        env:
+          PREPARED_INPUT: ${{ inputs.macos_input }}
+        run: python scripts/macos.py plan-prepared
+      - name: Restore Mac prepared input
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
+        with:
+          path: .macos-downloads
+          key: macos-input-v1-${{ steps.macinput.outputs.input_revision }}
+      - name: Download and verify Mac prepared input
+        env:
+          PREPARED_INPUT: ${{ inputs.macos_input }}
+        run: python scripts/macos.py download-prepared
       - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68
         with:
           dotnet-version: '10.0.x'
       - name: Install upstream build tools
         run: |
-          python -m pip install pyyaml==6.0.3
+          python -m pip install pyyaml==6.0.3 pillow==12.1.1 numpy==2.4.4 lz4 capstone unicorn
           for tool in xcodegen spirv-cross; do
             brew list "$tool" >/dev/null 2>&1 || brew install "$tool"
           done
@@ -130,7 +148,7 @@ jobs:
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
         with:
           path: .tvos-work/build
-          key: tvos-generation-v1-${{ hashFiles('scripts/tvos.py') }}-${{ steps.identity.outputs.source_commit }}-${{ steps.xcode.outputs.toolchain }}-${{ steps.game.outputs.input_revision }}
+          key: tvos-generation-v1-${{ hashFiles('scripts/tvos*.py') }}-${{ steps.identity.outputs.source_commit }}-${{ steps.xcode.outputs.toolchain }}-${{ steps.game.outputs.input_revision }}
       - name: Build upstream DmTV and TV Legacy overlay
         run: python scripts/tvos.py build
       - name: Check generation cache space
@@ -156,6 +174,7 @@ jobs:
           compression-level: 0
           retention-days: 3
       - name: Publish experimental pre-release
+        if: inputs.publish
         run: python scripts/tvos.py publish
       - name: Upload failure log
         if: failure()
