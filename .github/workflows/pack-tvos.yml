@@ -1,0 +1,167 @@
+name: Reusable experimental tvOS build
+on:
+  workflow_call:
+    inputs:
+      prepared_input:
+        description: iOS prepared JSON for matching Legacy pack metadata
+        type: string
+        required: true
+      source_repository:
+        type: string
+        default: jhaizhou-ops/d2r-mobile
+      source_ref:
+        type: string
+        default: ''
+    secrets:
+      GAME_ARCHIVE:
+        required: true
+      SOURCE_TOKEN:
+        required: false
+permissions:
+  contents: write
+  actions: write
+concurrency:
+  group: d2r-tvos-build
+  queue: max
+  cancel-in-progress: false
+jobs:
+  tvos:
+    runs-on: macos-26
+    timeout-minutes: 120
+    env:
+      SOURCE_REPOSITORY: ${{ inputs.source_repository }}
+      GH_TOKEN: ${{ github.token }}
+      HOMEBREW_NO_AUTO_UPDATE: '1'
+      HOMEBREW_NO_INSTALL_CLEANUP: '1'
+      PIP_DISABLE_PIP_VERSION_CHECK: '1'
+      DOTNET_CLI_TELEMETRY_OPTOUT: '1'
+      DOTNET_NOLOGO: '1'
+      PYTHONUTF8: '1'
+      J: '3'
+    steps:
+      - name: Resolve the tools revision
+        id: tools
+        uses: jiayx/d2r-mobile-build/.github/actions/resolve-tools@main
+        with:
+          workflow: pack-tvos.yml
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: jiayx/d2r-mobile-build
+          ref: ${{ steps.tools.outputs.tools_commit }}
+          persist-credentials: false
+      - name: Select the latest release or requested source
+        id: source
+        env:
+          GH_TOKEN: ${{ secrets.SOURCE_TOKEN || github.token }}
+          SOURCE_REF: ${{ inputs.source_ref }}
+        run: python3 scripts/source/resolve.py
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: ${{ inputs.source_repository }}
+          token: ${{ secrets.SOURCE_TOKEN || github.token }}
+          ref: ${{ steps.source.outputs.ref }}
+          fetch-depth: 0
+          path: upstream
+          persist-credentials: false
+      - name: Record the selected source and build identity
+        id: identity
+        run: python3 scripts/source/configure.py
+      - name: Select the Apple toolchain
+        id: xcode
+        run: python3 scripts/source/select_xcode.py
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: requirements.txt
+      - name: Install the archive downloader
+        run: python -m pip install -r requirements.txt
+      - name: Validate original game input configuration
+        id: game
+        env:
+          GAME_ARCHIVE: ${{ secrets.GAME_ARCHIVE }}
+        run: python scripts/tvos.py plan
+      - name: Restore original game archive
+        id: archive
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
+        with:
+          path: .game-downloads
+          key: input-archive-v1-${{ steps.game.outputs.input_revision }}
+      - name: Verify or download original game archive
+        env:
+          GAME_ARCHIVE: ${{ secrets.GAME_ARCHIVE }}
+        run: python scripts/tvos.py download
+      - name: Check archive cache space
+        id: budget
+        if: steps.archive.outputs.cache-hit != 'true'
+        run: python scripts/cache_budget.py .game-downloads archive
+      - name: Preserve original archive
+        if: steps.budget.outputs.archive == 'true'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
+        with:
+          path: .game-downloads
+          key: ${{ steps.archive.outputs.cache-primary-key }}
+      - name: Resolve iOS prepared input for Legacy metadata
+        id: input
+        env:
+          PREPARED_INPUT: ${{ inputs.prepared_input }}
+        run: python scripts/source/prepared.py resolve
+      - name: Restore existing iOS input cache
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
+        with:
+          path: .prepared-downloads
+          key: prepared-input-v1-${{ steps.input.outputs.input_revision }}
+      - name: Verify or download iOS prepared input
+        env:
+          PREPARED_INPUT: ${{ inputs.prepared_input }}
+        run: python scripts/source/prepared.py download
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68
+        with:
+          dotnet-version: '10.0.x'
+      - name: Install upstream build tools
+        run: |
+          python -m pip install pyyaml==6.0.3
+          for tool in xcodegen spirv-cross; do
+            brew list "$tool" >/dev/null 2>&1 || brew install "$tool"
+          done
+          xcrun --sdk appletvos metal --version || xcodebuild -downloadComponent MetalToolchain
+      - name: Restore matching generation cache
+        id: generation
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
+        with:
+          path: .tvos-work/build
+          key: tvos-generation-v1-${{ hashFiles('scripts/tvos.py') }}-${{ steps.identity.outputs.source_commit }}-${{ steps.xcode.outputs.toolchain }}-${{ steps.game.outputs.input_revision }}
+      - name: Build upstream DmTV and TV Legacy overlay
+        run: python scripts/tvos.py build
+      - name: Check generation cache space
+        id: generation-budget
+        if: steps.generation.outputs.cache-hit != 'true'
+        run: python scripts/cache_budget.py .tvos-work/build tvos
+      - name: Preserve generation output
+        if: steps.generation-budget.outputs.tvos == 'true'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
+        with:
+          path: .tvos-work/build
+          key: ${{ steps.generation.outputs.cache-primary-key }}
+      - name: Upload tvOS packages
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: tvOS-experimental
+          path: |
+            outputs/*-tvos.ipa
+            outputs/*-tvos-overlay.zip
+            outputs/TV-SHA256SUMS.txt
+            outputs/tvos-build-report.json
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 3
+      - name: Publish experimental pre-release
+        run: python scripts/tvos.py publish
+      - name: Upload failure log
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: tvos-build-log
+          path: .tvos-work/run/tvos/build.log
+          if-no-files-found: ignore
+          retention-days: 3
