@@ -167,6 +167,6 @@ if __name__ == '__main__':
         {'plan': plan, 'download': tvos_inputs.download, 'build': build, 'publish': publish}[sys.argv[1]]()
     except Exception as exc:
         # Downloader exceptions can contain private URLs.
-        message = str(exc) if isinstance(exc, ValueError) else type(exc).__name__
+        message = str(exc) if isinstance(exc, (ValueError, RuntimeError)) else type(exc).__name__
         print('::error::' + message, file=sys.stderr)
         sys.exit(1)
