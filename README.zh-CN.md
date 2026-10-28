@@ -115,4 +115,4 @@
 
 ## Apple TV（实验性）
 
-已加入基于上游的 tvOS 构建工作流，首次原生构建仍待补齐原始输入。详见[要求、构建和安装说明](docs/TVOS.md)。面向第三代 Apple TV 4K（A15）、tvOS 26+，需要扩展手柄。未进行真机测试；存档位于系统可清理的 Caches。
+已加入基于上游的 tvOS 构建工作流，首次原生构建受 README Data 文件的 Google Drive 下载配额限制。详见[要求、构建和安装说明](docs/TVOS.md)。面向第三代 Apple TV 4K（A15）、tvOS 26+，需要扩展手柄。未进行真机测试；存档位于系统可清理的 Caches。

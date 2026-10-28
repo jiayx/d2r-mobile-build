@@ -115,4 +115,4 @@ Reuse your existing Mac prepared input configuration when updating. If the workf
 
 ## Apple TV (experimental)
 
-An upstream-based tvOS build workflow is available; its first native build is pending the required original input. See [requirements, build and installation](docs/TVOS.md). It targets Apple TV 4K (3rd generation, A15), tvOS 26+, and an extended gamepad. No physical-device testing; saves are stored in purgeable Caches.
+An upstream-based tvOS build workflow is available; its first native build is pending access to the README Data files (Drive download quota). See [requirements, build and installation](docs/TVOS.md). It targets Apple TV 4K (3rd generation, A15), tvOS 26+, and an extended gamepad. No physical-device testing; saves are stored in purgeable Caches.
