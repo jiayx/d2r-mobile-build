@@ -1,0 +1,38 @@
+name: Inspect TV shader inputs
+on:
+  pull_request:
+    paths:
+      - .github/workflows/probe-tvos-input.yml
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
+        with:
+          path: .macos-downloads
+          key: macos-input-v1-9c66d49764c52c3b584402f4820cf5f6b0e52a08c39e5754edd053664e4c4655
+          fail-on-cache-miss: true
+      - name: Inspect prepared archive and original shader addresses
+        run: |
+          python3 - <<'PY'
+          import zipfile, io, collections, json, hashlib
+          from pathlib import Path
+          p=Path('.macos-downloads/prepared-input.archive')
+          assert hashlib.file_digest(p.open('rb'),'sha256').hexdigest()=='b785630fc4db5ce07c6d8f4d7deb91d88bafb8087f1b5c937a352e2e57e58d7e'
+          with zipfile.ZipFile(p) as z:
+              names=z.namelist()
+              print('MSL sources:',sum(n.endswith('.metal') for n in names))
+              print('Prepared program files:', [n for n in names if n.startswith('product/')])
+              with zipfile.ZipFile(io.BytesIO(z.read('romfs-inputs.zip'))) as r:
+                  rows=r.read('data/build_manifest.psv').decode().splitlines()
+                  totals=collections.Counter(); count=0
+                  for line in rows:
+                      f=line.split('|')
+                      if len(f)>=11 and '/shaders/' in f[9].lower() and f[9].endswith('.bin'):
+                          k=bytes.fromhex(f[6]); totals[f'{k[9]:02d}-{k[10]:08d}.data']+=int(f[7]);count+=1
+                  print('Shader pack count:',count)
+                  print('Shader bytes by Data archive:',json.dumps(totals))
+                  print('Saved source archive sizes:',r.read('ranges.json').decode()[:650])
+          PY
