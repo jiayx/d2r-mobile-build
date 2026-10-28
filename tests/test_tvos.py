@@ -54,6 +54,6 @@ class SplitArchiveTests(unittest.TestCase):
                 p = Path(directory) / str(i); p.write_bytes(part); paths.append(p)
             with zipfile.ZipFile(tvos_inputs.SplitReader(paths)) as z:
                 self.assertEqual(z.read('data/test'), b'original shader' * 200)
-            with zipfile.ZipFile(tvos_inputs.SplitReader(paths[::-1])) as z:
-                with self.assertRaises(Exception):
+            with self.assertRaises(zipfile.BadZipFile):
+                with zipfile.ZipFile(tvos_inputs.SplitReader(paths[::-1])) as z:
                     z.read('data/test')
