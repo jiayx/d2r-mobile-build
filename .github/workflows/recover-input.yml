@@ -30,6 +30,8 @@ jobs:
           ref: e2a0c9a9b5d65f6cd505e967e4760e2745e90ca8
           path: historical-input/upstream
           persist-credentials: false
+      - name: Install the current archive downloader
+        run: python3 -m pip install -r requirements.txt
       - name: Check extraction input availability without logging key values
         run: python3 scripts/maintenance/recover_input.py preflight
       - name: Install extraction tools
