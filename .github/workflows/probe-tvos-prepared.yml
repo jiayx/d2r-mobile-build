@@ -5,12 +5,10 @@ on:
       - .github/workflows/probe-tvos-prepared.yml
 permissions:
   contents: write
-  actions: read
+  actions: write
 jobs:
-  prepare:
-    uses: ./.github/workflows/prepare-tvos.yml
+  tvos:
+    uses: jiayx/d2r-mobile-build/.github/workflows/pack-tvos.yml@feat/tvos-prepared-input
     with:
-      prepared_input: '{"url": "https://ipfs.filebase.io/ipfs/bafybeidyux36pampsnbtwnvsoyzhvag542yhccam772euftusosnkhxcpu/D2RMobile-Prepared.zip", "sha256_url": "https://ipfs.filebase.io/ipfs/bafybeidyux36pampsnbtwnvsoyzhvag542yhccam772euftusosnkhxcpu/Prepared-SHA256SUMS.txt"}'
-      macos_input: '{"url": "https://ipfs.filebase.io/ipfs/bafybeidyux36pampsnbtwnvsoyzhvag542yhccam772euftusosnkhxcpu/D2RMobile-MacPrepared.zip", "sha256_url": "https://ipfs.filebase.io/ipfs/bafybeidyux36pampsnbtwnvsoyzhvag542yhccam772euftusosnkhxcpu/MacPrepared-SHA256SUMS.txt"}'
-      data_input: '{"recovery_run_id":"41077361816"}'
-# Verify bounded draft visibility retry.
+      publish: false
+      prepared_input: '{"url": "https://github.com/jiayx/d2r-mobile-build/releases/download/tvos-prepared-v1-ef88cf20fa3fec561f5caf26dad069b106e48386e2dcc3e786e43d7003891c48/D2RMobile-TVPrepared.zip", "sha256_url": "https://github.com/jiayx/d2r-mobile-build/releases/download/tvos-prepared-v1-ef88cf20fa3fec561f5caf26dad069b106e48386e2dcc3e786e43d7003891c48/TVPrepared-SHA256SUMS.txt"}'

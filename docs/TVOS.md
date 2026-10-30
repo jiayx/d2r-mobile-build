@@ -6,49 +6,32 @@ This workflow follows upstream's `dm/tvos/build.sh` and `dm/tvos/gen_romfs_overl
 
 ## Build / 构建
 
-Run **Build Apple TV (experimental)** with three inputs:
+Run **Build Apple TV (experimental)** with one `prepared_input` JSON containing an HTTPS `url` and `sha256` or `sha256_url`. Leave `source_ref` empty to follow the latest official upstream Release.
 
-- `prepared_input`: the iOS JSON from the main README (verified Legacy descriptor/index).
-- `macos_input`: the macOS JSON from the main README (verified rewritten programs and original interface inputs).
-- `data_input`: the recovered shader run JSON below (recommended), or ordered Data archive parts and their checksums.
-
-运行 **Build Apple TV (experimental)**，填写三个输入：
-
-- `prepared_input`：主 README 的 iOS JSON，用于已校验的 Legacy 描述和索引。
-- `macos_input`：主 README 的 macOS JSON，用于已校验的改写程序和原始界面输入。
-- `data_input`：下方已恢复的着色器运行 JSON（推荐），或按顺序排列的 Data 分卷及其校验值。
-
-Leave `source_ref` empty for the latest official upstream Release. The workflow downloads and verifies the parts on Actions, extracts original shader packs from Data, reuses verified Mac program images, translates shaders with upstream tools, compiles tvOS libraries, then builds upstream `DmTV` and the TV-specific Legacy overlay. Embedded shaders are read from the prepared main image; upstream checks their control-segment hashes against the shader map. No synthetic ExeFS or original-game checksum bypass is used. Neither the Mac nor iOS compiled libraries are used as tvOS libraries.
-
-`source_ref` 留空跟随最新正式 Release。工作流在 Actions 下载和校验分卷，从 Data 提取原始着色器包，复用已校验的 Mac 程序映像，通过上游工具翻译并编译 tvOS 着色器，再构建上游 `DmTV` 和电视专用 Legacy 覆盖层。程序内嵌着色器从预处理 main 映像读取，上游仍逐个核对控制段哈希。不会伪造 ExeFS 或跳过原始游戏校验；不会将 Mac/iOS 编译库当作 tvOS 库。
-
-Available matching input/generation caches are restored, with space checks before saving and no deletion of other caches. The recovered-input path downloads about 30 MB; the Data-parts path downloads about 5.43 GB on Actions; it does not download game files to your local computer. A successful run publishes an experimental prerelease containing an unsigned `*-tvos.ipa`, `*-tvos-overlay.zip`, checksums and a build report. It does not replace the latest stable iOS/Mac Release. TV embeds game program segments using upstream's build; the iOS Guest ad-hoc signing flow is unchanged.
-
-复用匹配的输入和生成缓存，保存前检查空间，不删除其他缓存。已恢复输入路径约需下载 30 MB；Data 分卷路径在 Actions 下载约 5.43 GB，不下载游戏文件到本机。成功后发布实验性预发布，包含未签名 IPA、TV 覆盖层 ZIP、校验清单和构建报告，不替换最新稳定 iOS/Mac Release。TV 按上游方式内嵌程序段；iOS Guest ad-hoc 签名流程不变。
-
-### Recovered shader input / 已恢复的着色器输入
-
-For this repository, `data_input` also accepts a successful `recover-input.yml` run containing the `tvos-shader-input` artifact:
-
-本仓库也可使用成功的 `recover-input.yml` 运行所保存的 `tvos-shader-input` artifact：
+运行 **Build Apple TV (experimental)**，仅填写一份 `prepared_input` JSON，包含 HTTPS `url` 和 `sha256` 或 `sha256_url`。`source_ref` 留空跟随最新正式 Release。
 
 ```json
-{"recovery_run_id":"41077361816"}
+{
+  "url": "https://github.com/jiayx/d2r-mobile-build/releases/download/tvos-prepared-v1-ef88cf20fa3fec561f5caf26dad069b106e48386e2dcc3e786e43d7003891c48/D2RMobile-TVPrepared.zip",
+  "sha256_url": "https://github.com/jiayx/d2r-mobile-build/releases/download/tvos-prepared-v1-ef88cf20fa3fec561f5caf26dad069b106e48386e2dcc3e786e43d7003891c48/TVPrepared-SHA256SUMS.txt"
+}
 ```
 
-This path downloads only shader inputs within Actions and validates them against the prepared resource manifest's original content checksums. Artifacts expire after 90 days; regenerate from the original input cache if unavailable. No external build server is used.
+The standalone TV package contains only the rewritten main/sdk programs and tables, sparse original interface inputs, Legacy descriptor/index, original shader packs and checksums. It contains no iOS/Mac compiled Metal libraries. The builder verifies all files and source compatibility, checks original shader content hashes, then builds TV libraries, DmTV and the TV Legacy overlay using upstream tools.
 
-此路径仅在 Actions 下载着色器输入，并逐个核对预处理资源清单中的原始内容校验值。Artifact 保留 90 天；过期后需从原始输入缓存重新生成。不使用外部构建服务器。
+独立 TV 包仅包含改写后的 main/sdk 程序及表、界面生成所需的原始数据、Legacy 描述及索引、原始着色器包和校验清单，不包含 iOS/Mac 已编译 Metal 库。构建时验证全部文件和源码兼容性、原始着色器内容哈希，再使用上游工具生成 TV 库、DmTV 和电视专用 Legacy 覆盖层。
 
-### Existing Data input / 现有 Data 输入
+The input is stored in a separate immutable Release rather than an expiring Actions artifact. Existing iOS/Mac input packages are unchanged. Matching caches are reused when available; the capacity guard never deletes other caches to make room.
 
-```json
-{"parts": [{"url": "https://drive.google.com/file/d/1xcXQwIYCq1Lugqwj-P7B2x9X-cu3dDKy/view", "sha256": "e383d983b8f504b03b31858241ee219d3a229c1e11f8bbfabeeb14f7087d7870"}, {"url": "https://drive.google.com/file/d/1RtHduJ_ujrWnhFJiDTYfHCVQfJM2bWbs/view", "sha256": "d35bb84234ad5ea858504cddcb06150cb61b84aabf15127bf5e23dc45e0ad2ac"}, {"url": "https://drive.google.com/file/d/1oaGEP0cn0U6YRLaERV9kkSZHi5VWsjRf/view", "sha256": "135003ac568178ce47c9c4d8dba37c094ea828583825e6964b27e3bfa6444588"}], "sha256": "0f788dbf4019ea934949c0ba268a6649980faef99466fe188d5d0823654cf494"}
-```
+输入存放在独立、内容哈希命名的 Release，不依赖会过期的 Actions artifact。现有 iOS/Mac 预处理包保持不变。有匹配缓存时复用；空间保护不会通过删除其他缓存腾出空间。
 
-The checksums come from `Resources-Parts-SHA256SUMS.txt` and `resources-report.json` in the README's resource folder. If Google Drive reports a download quota error, wait for availability or supply an accessible mirror of the same files with matching checksums. Do not remove checksum validation.
+To refresh the TV package, run **Prepare TV input** with the existing iOS/Mac prepared JSON and `data_input` containing a successful original recovery run, for example `{"recovery_run_id":"41077361816"}`. Preparation verifies all three inputs, keeps only the required files, and publishes a new package, checksum list and size report. The recovery artifact must still be available when refreshing; normal TV builds do not need it.
 
-校验值来自 README 资源目录中的分卷校验清单和 `resources-report.json`。若 Google Drive 返回下载配额错误，应等待恢复或改用同文件、同校验值的可用镜像，不关闭校验。
+更新 TV 包时运行 **Prepare TV input**：填写现有 iOS/Mac 预处理 JSON，以及含成功原始恢复任务编号的 `data_input`（例如 `{"recovery_run_id":"41077361816"}`）。制作流程完整校验三份输入，仅保留必需文件，并发布新包、校验清单和体积报告。更新输入时恢复 artifact 须仍可用；日常 TV 构建不再依赖它。
+
+A successful app build publishes an experimental prerelease with unsigned IPA, TV overlay, checksums and a build report. It does not replace the stable iOS/Mac Release. Installation and gameplay still require physical-device testing.
+
+App 构建成功后发布实验性预发布，包含未签名 IPA、TV 覆盖层、校验清单和构建报告，不替换稳定 iOS/Mac Release。安装和实际游玩仍需真机验证。
 
 ## Install and import / 安装和资源导入
 
