@@ -2,6 +2,10 @@ name: Recover original program inputs
 on:
   workflow_dispatch:
     inputs:
+      export_shaders:
+        description: Export verified original shader packs for tvOS
+        type: boolean
+        default: false
       key_archive:
         description: 'Optional replacement extraction archive JSON: HTTPS url and sha256'
         type: string
@@ -84,5 +88,16 @@ jobs:
         with:
           name: original-exefs
           path: recovered-input
+          retention-days: 90
+          if-no-files-found: error
+      - name: Extract verified original shader packs
+        if: inputs.export_shaders
+        run: python3 scripts/maintenance/recover_input.py shaders
+      - name: Preserve verified TV shader inputs
+        if: inputs.export_shaders
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: tvos-shader-input
+          path: recovered-shaders
           retention-days: 90
           if-no-files-found: error

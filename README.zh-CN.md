@@ -114,3 +114,7 @@ IPA 携带 `com.apple.developer.kernel.increased-memory-limit` 的 ad-hoc 权限
 保持资源文件夹的位置不变，游戏资源版本未变时可继续复用已有 Data。macOS 15 版使用独立存档目录，可与 macOS 26 版并存。
 
 更新时可继续使用原来的 Mac 预处理包配置；若工作流提示需要新版 Mac 预处理包，更新 `prepared_input` 后重新运行。
+
+## Apple TV（实验性）
+
+已加入基于上游的 tvOS 构建工作流，[v2.2.0 实验版](https://github.com/jiayx/d2r-mobile-build/releases/tag/v2.2.0-build.7.1-tvos) 已通过原生编译及打包校验。详见[要求、构建和安装说明](docs/TVOS.md)。面向第三代 Apple TV 4K（A15）、tvOS 26+，需要扩展手柄。未进行真机测试；存档位于系统可清理的 Caches。

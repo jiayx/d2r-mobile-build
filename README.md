@@ -114,3 +114,7 @@ Run **Build macOS** again with the macOS JSON configuration to build the latest 
 Keep the resource folder in the same location. Existing Data can be reused while the game resource version remains unchanged. The macOS 15 app uses its own save directory and can coexist with the macOS 26 app.
 
 Reuse your existing Mac prepared input configuration when updating. If the workflow asks for a newer Mac prepared package, update `prepared_input` and run it again.
+
+## Apple TV (experimental)
+
+An upstream-based tvOS build workflow is available. The [experimental v2.2.0 package](https://github.com/jiayx/d2r-mobile-build/releases/tag/v2.2.0-build.7.1-tvos) has passed native compilation and package checks. See [requirements, build and installation](docs/TVOS.md). It targets Apple TV 4K (3rd generation, A15), tvOS 26+, and an extended gamepad. No physical-device testing; saves are stored in purgeable Caches.
