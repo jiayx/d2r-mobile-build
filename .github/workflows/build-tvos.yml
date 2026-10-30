@@ -3,16 +3,8 @@ run-name: tvOS source build · ${{ inputs.source_ref || 'latest release' }}
 on:
   workflow_dispatch:
     inputs:
-      macos_input:
-        description: macOS prepared JSON from README
-        type: string
-        required: true
-      data_input:
-        description: Recovered shader run or ordered Data parts JSON (docs/TVOS.md)
-        type: string
-        required: true
       prepared_input:
-        description: iOS prepared JSON for Legacy metadata (see docs/TVOS.md)
+        description: TV prepared JSON from docs/TVOS.md
         type: string
         required: true
       source_repository:
@@ -30,8 +22,6 @@ jobs:
   build:
     uses: jiayx/d2r-mobile-build/.github/workflows/pack-tvos.yml@main
     with:
-      macos_input: ${{ inputs.macos_input }}
-      data_input: ${{ inputs.data_input }}
       prepared_input: ${{ inputs.prepared_input }}
       source_repository: ${{ inputs.source_repository }}
       source_ref: ${{ inputs.source_ref }}
