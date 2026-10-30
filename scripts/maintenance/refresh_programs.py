@@ -35,6 +35,11 @@ def verify_reusable(upstream, baseline):
             raise ValueError('Full preparation required; asset dependency changed: ' + name)
 
 
+def extract_package(archive, destination, kind):
+    # Match the standard importers: Mac contains individual shader libraries.
+    extract(archive, destination, max_members=100000 if kind == 'macos' else 32)
+
+
 def refresh():
     upstream = ROOT / 'upstream'
     originals = ROOT / 'recovered-input/ExeFS'
@@ -50,7 +55,7 @@ def refresh():
         destination = ROOT / ('.ios-prepared' if kind == 'ios' else '.macos-prepared')
         if destination.exists():
             raise ValueError('Refresh destination already exists; preserve it and use a fresh workspace')
-        extract(archive, destination)
+        extract_package(archive, destination, kind)
         archives[kind] = ci.sha256(archive)
         if kind == 'ios':
             info = prepared.verify_directory(destination)
