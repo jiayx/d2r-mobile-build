@@ -10,9 +10,9 @@ jobs:
   tvos:
     uses: jiayx/d2r-mobile-build/.github/workflows/pack-tvos.yml@feat/tvos-build
     with:
-      source_ref: v2.1.0
-      publish: false
-      prepared_input: '{"url": "https://ipfs.filebase.io/ipns/k51qzi5uqu5dkbfnqcjbd6jlgbckojtl4gu7m1kgu8esex1zg4oo485o5cjop2/D2RMobile-Prepared.zip", "sha256_url": "https://ipfs.filebase.io/ipns/k51qzi5uqu5dkbfnqcjbd6jlgbckojtl4gu7m1kgu8esex1zg4oo485o5cjop2/Prepared-SHA256SUMS.txt"}'
-      macos_input: '{"url": "https://ipfs.filebase.io/ipfs/bafybeihkvz24tivc4hqtlruqlagtrtgcanuzj3o4fgrfjgolxui4hzvni4/D2RMobile-MacPrepared.zip", "sha256_url": "https://ipfs.filebase.io/ipfs/bafybeihkvz24tivc4hqtlruqlagtrtgcanuzj3o4fgrfjgolxui4hzvni4/MacPrepared-SHA256SUMS.txt"}'
+      source_ref: ''
+      publish: true
+      prepared_input: '{"url": "https://ipfs.filebase.io/ipfs/bafybeidyux36pampsnbtwnvsoyzhvag542yhccam772euftusosnkhxcpu/D2RMobile-Prepared.zip", "sha256_url": "https://ipfs.filebase.io/ipfs/bafybeidyux36pampsnbtwnvsoyzhvag542yhccam772euftusosnkhxcpu/Prepared-SHA256SUMS.txt"}'
+      macos_input: '{"url": "https://ipfs.filebase.io/ipfs/bafybeidyux36pampsnbtwnvsoyzhvag542yhccam772euftusosnkhxcpu/D2RMobile-MacPrepared.zip", "sha256_url": "https://ipfs.filebase.io/ipfs/bafybeidyux36pampsnbtwnvsoyzhvag542yhccam772euftusosnkhxcpu/MacPrepared-SHA256SUMS.txt"}'
       data_input: '{"parts": [{"url": "https://drive.google.com/file/d/1xcXQwIYCq1Lugqwj-P7B2x9X-cu3dDKy/view", "sha256": "e383d983b8f504b03b31858241ee219d3a229c1e11f8bbfabeeb14f7087d7870"}, {"url": "https://drive.google.com/file/d/1RtHduJ_ujrWnhFJiDTYfHCVQfJM2bWbs/view", "sha256": "d35bb84234ad5ea858504cddcb06150cb61b84aabf15127bf5e23dc45e0ad2ac"}, {"url": "https://drive.google.com/file/d/1oaGEP0cn0U6YRLaERV9kkSZHi5VWsjRf/view", "sha256": "135003ac568178ce47c9c4d8dba37c094ea828583825e6964b27e3bfa6444588"}], "sha256": "0f788dbf4019ea934949c0ba268a6649980faef99466fe188d5d0823654cf494"}'
 # Retry with downloader diagnostics preserved.
