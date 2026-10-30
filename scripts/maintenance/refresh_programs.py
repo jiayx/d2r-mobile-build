@@ -17,12 +17,15 @@ from input_config import settings
 from source import compatibility, prepared, prepare_ios
 
 REGENERATED = {'dm/tools/patch_nso.py', 'dm/tools/guest_dylib.py'}
+REUSED_TABLE_GENERATORS = {'dm/ios/tools/gen_vault_table.py',
+                          'dm/ios/tools/gen_hud_exp.py', 'dm/tools/gen_bright_levels.py'}
 
 
 def verify_reusable(upstream, baseline):
     # Only these two generators are rerun here. Every other generation dependency
     # must be identical or already reviewed by the standard compatibility guard.
-    names = compatibility.generation_paths(upstream, baseline) | compatibility.generation_paths(upstream, None)
+    names = (compatibility.generation_paths(upstream, baseline)
+             | compatibility.generation_paths(upstream, None) | REUSED_TABLE_GENERATORS)
     changed = set(compatibility.git(upstream, 'diff', '--name-only', baseline, 'HEAD').splitlines())
     for name in sorted((names & changed) - REGENERATED):
         allowed = compatibility.COMPATIBLE_GENERATORS.get(name, set())

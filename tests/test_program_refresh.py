@@ -36,3 +36,7 @@ class ProgramRefreshGuardTests(unittest.TestCase):
     def test_unknown_change_to_reviewed_generator_is_rejected(self):
         with self.assertRaisesRegex(ValueError, 'asset dependency changed'):
             self.check_change('dm/gfx/tools/msl_retarget.sh')
+
+    def test_reused_table_generator_changes_require_preparation(self):
+        with self.assertRaisesRegex(ValueError, 'asset dependency changed'):
+            self.check_change('dm/ios/tools/gen_vault_table.py')
