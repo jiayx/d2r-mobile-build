@@ -1,6 +1,5 @@
 """Experimental tvOS packaging through upstream's device build entry point."""
 import json
-import hashlib
 import shutil
 import os
 from pathlib import Path
@@ -10,19 +9,9 @@ import sys
 import zipfile
 
 import ci
-from archive_input import extract
-from input_config import input_identity, settings
-from source import prepared
-import macos
 import tvos_inputs
+import tvos_prepared
 from source.publish import gh, release_info, upload_verified
-
-
-def plan():
-    data = tvos_inputs.configuration()
-    identity = hashlib.sha256(json.dumps(data, sort_keys=True).encode()).hexdigest()
-    with open(os.environ['GITHUB_OUTPUT'], 'a') as out:
-        out.write('input_revision=' + identity + '\n')
 
 
 def configure_project(path, config):
@@ -58,23 +47,15 @@ def build():
     root = ci.ROOT
     dm = root / 'upstream/dm'
     work = root / '.tvos-work'
-    macos.import_prepared()
-    mac = root / '.macos-prepared'
-    mac_info = macos.load_prepared()
-    inputs = root / '.tvos-ios-input'
-    extract(root / '.prepared-downloads/prepared-input.archive', inputs)
-    info = prepared.verify_directory(inputs)
-    if info['nso_sha256'] != ci.CONFIG['nso_sha256']:
-        raise ValueError('Legacy metadata belongs to different game programs')
-    # Only Legacy pack metadata is reused; Apple binary libraries are NOT retargeted.
+    inputs, info = tvos_prepared.load()
     environment = dict(os.environ, DM_ROOT=str(work),
                        DM_ASTC_PACK=str(inputs / 'legacy'), DM_TV_NOSIGN='1',
                        DM_TEAM_ID='0000000000', DM_BUNDLE_ID='org.d2rmobile.app')
-    paths = tvos_inputs.download()
-    romfs, packs = tvos_inputs.extract_shader_packs(dm, mac, work, paths, environment)
+    romfs, packs = tvos_inputs.extract_shader_packs(dm, inputs, work,
+                      [inputs / 'D2RMobile-TVShaderInput.zip'], environment)
     environment['DM_ROMFS_SRC'] = str(romfs)
-    product = work / 'build/cache/dm/out' / (mac_info['product'] + '-touch')
-    shutil.copytree(mac / 'product', product, dirs_exist_ok=True)
+    product = work / 'build/cache/dm/out' / (info['product'] + '-touch')
+    shutil.copytree(inputs / 'product', product, dirs_exist_ok=True)
     environment['DM_OUT'] = str(product)
     translator = work / 'build/gfx/dmsh_xlate'
     subprocess.run(['dotnet', 'publish', str(dm / 'gfx/tools/dmsh_xlate'), '-c', 'Release',
@@ -134,7 +115,7 @@ def build():
                   release_tag=tag, device_tested=False, signed=False,
                   game_program_layout='upstream embedded segments',
                   shader_chain=chain, metal_libraries=len(libs),
-                  legacy_pack=info['payload']['legacy_pack'], packages=packages)
+                  legacy_pack=info['legacy_pack'], packages=packages)
     (out / 'tvos-build-report.json').write_text(json.dumps(report, indent=2) + '\n')
     (out / 'TV-SHA256SUMS.txt').write_text(''.join(p['sha256'] + '  ' + p['name'] + '\n' for p in packages))
 
@@ -164,7 +145,7 @@ def publish():
 
 if __name__ == '__main__':
     try:
-        {'plan': plan, 'download': tvos_inputs.download, 'build': build, 'publish': publish}[sys.argv[1]]()
+        {'plan': tvos_prepared.plan, 'download': tvos_prepared.download, 'build': build, 'publish': publish}[sys.argv[1]]()
     except Exception as exc:
         # Downloader exceptions can contain private URLs.
         message = str(exc) if isinstance(exc, (ValueError, RuntimeError)) else type(exc).__name__
