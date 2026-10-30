@@ -13,8 +13,8 @@
 
    ```json
    {
-     "url": "https://github.com/jiayx/d2r-mobile-build/releases/download/ios-program-refresh-v1-9176e763ba35efb462ffe7d21fb36c34d6504b0c42305e34c839a6205d95dc4a/D2RMobile-Prepared.zip",
-     "sha256_url": "https://github.com/jiayx/d2r-mobile-build/releases/download/ios-program-refresh-v1-9176e763ba35efb462ffe7d21fb36c34d6504b0c42305e34c839a6205d95dc4a/Prepared-SHA256SUMS.txt"
+     "url": "https://ipfs.filebase.io/ipfs/bafybeidyux36pampsnbtwnvsoyzhvag542yhccam772euftusosnkhxcpu/D2RMobile-Prepared.zip",
+     "sha256_url": "https://ipfs.filebase.io/ipfs/bafybeidyux36pampsnbtwnvsoyzhvag542yhccam772euftusosnkhxcpu/Prepared-SHA256SUMS.txt"
    }
    ```
 
@@ -22,8 +22,8 @@
 
    ```json
    {
-     "url": "https://github.com/jiayx/d2r-mobile-build/releases/download/macos-program-refresh-v1-9176e763ba35efb462ffe7d21fb36c34d6504b0c42305e34c839a6205d95dc4a/D2RMobile-MacPrepared.zip",
-     "sha256_url": "https://github.com/jiayx/d2r-mobile-build/releases/download/macos-program-refresh-v1-9176e763ba35efb462ffe7d21fb36c34d6504b0c42305e34c839a6205d95dc4a/MacPrepared-SHA256SUMS.txt"
+     "url": "https://ipfs.filebase.io/ipfs/bafybeidyux36pampsnbtwnvsoyzhvag542yhccam772euftusosnkhxcpu/D2RMobile-MacPrepared.zip",
+     "sha256_url": "https://ipfs.filebase.io/ipfs/bafybeidyux36pampsnbtwnvsoyzhvag542yhccam772euftusosnkhxcpu/MacPrepared-SHA256SUMS.txt"
    }
    ```
 
