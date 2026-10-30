@@ -13,8 +13,8 @@
 
    ```json
    {
-     "url": "https://ipfs.filebase.io/ipns/k51qzi5uqu5dkbfnqcjbd6jlgbckojtl4gu7m1kgu8esex1zg4oo485o5cjop2/D2RMobile-Prepared.zip",
-     "sha256_url": "https://ipfs.filebase.io/ipns/k51qzi5uqu5dkbfnqcjbd6jlgbckojtl4gu7m1kgu8esex1zg4oo485o5cjop2/Prepared-SHA256SUMS.txt"
+     "url": "https://github.com/jiayx/d2r-mobile-build/releases/download/ios-program-refresh-v1-9176e763ba35efb462ffe7d21fb36c34d6504b0c42305e34c839a6205d95dc4a/D2RMobile-Prepared.zip",
+     "sha256_url": "https://github.com/jiayx/d2r-mobile-build/releases/download/ios-program-refresh-v1-9176e763ba35efb462ffe7d21fb36c34d6504b0c42305e34c839a6205d95dc4a/Prepared-SHA256SUMS.txt"
    }
    ```
 
@@ -22,12 +22,12 @@
 
    ```json
    {
-     "url": "https://ipfs.filebase.io/ipfs/bafybeihkvz24tivc4hqtlruqlagtrtgcanuzj3o4fgrfjgolxui4hzvni4/D2RMobile-MacPrepared.zip",
-     "sha256_url": "https://ipfs.filebase.io/ipfs/bafybeihkvz24tivc4hqtlruqlagtrtgcanuzj3o4fgrfjgolxui4hzvni4/MacPrepared-SHA256SUMS.txt"
+     "url": "https://github.com/jiayx/d2r-mobile-build/releases/download/macos-program-refresh-v1-9176e763ba35efb462ffe7d21fb36c34d6504b0c42305e34c839a6205d95dc4a/D2RMobile-MacPrepared.zip",
+     "sha256_url": "https://github.com/jiayx/d2r-mobile-build/releases/download/macos-program-refresh-v1-9176e763ba35efb462ffe7d21fb36c34d6504b0c42305e34c839a6205d95dc4a/MacPrepared-SHA256SUMS.txt"
    }
    ```
 
-   配置中的预处理包由热心网友提供，iOS 约 **290 MB**，macOS 约 **299 MB**。
+   预处理包大小：iOS 约 **287 MB**，macOS 约 **299 MB**。
 
 3. 点击 **Run workflow** 开始构建。从下载预处理包到编译、打包并发布，iOS 预计约 **6 分钟**，macOS 约 **7 分钟**。
 
