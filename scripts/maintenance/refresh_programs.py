@@ -15,6 +15,7 @@ import macos
 from archive_input import extract
 from input_config import settings
 from source import compatibility, prepared, prepare_ios
+from maintenance.clean_prepared import clean_directory
 
 REGENERATED = {'dm/tools/patch_nso.py', 'dm/tools/guest_dylib.py'}
 REUSED_TABLE_GENERATORS = {'dm/ios/tools/gen_vault_table.py',
@@ -93,6 +94,7 @@ def refresh():
     for kind, (destination, info, baseline) in stages.items():
         info['program_refresh'] = {**evidence, 'base_archive_sha256': archives[kind],
                                    'reused_assets_source_commit': baseline}
+        info = clean_directory(destination, info, kind)
         if kind == 'ios':
             payload = destination / 'source-payload.zip'
             revised = destination / 'revised-payload.zip'
@@ -109,7 +111,7 @@ def refresh():
                     new.write(path, name)
             revised.replace(payload)
             info['producer'] = {'source_commit': source, 'tools_commit': os.environ['TOOLS_COMMIT']}
-            info['prepare_key'] = 'ios-program-refresh-v1-' + identity
+            info['prepare_key'] = 'ios-program-refresh-v2-' + identity
             info['payload']['payload_sha256'] = ci.sha256(payload)
             info['files'] = {name: {'bytes': (destination / name).stat().st_size,
                                     'sha256': ci.sha256(destination / name)} for name in info['files']}
@@ -121,7 +123,7 @@ def refresh():
             shutil.rmtree(destination / 'product')
             shutil.copytree(output, destination / 'product')
             info['source_commit'] = source
-            info['key'] = 'macos-program-refresh-v1-' + identity
+            info['key'] = 'macos-program-refresh-v2-' + identity
             info['files'] = {p.relative_to(destination).as_posix(): ci.sha256(p)
                              for p in sorted(destination.rglob('*')) if p.is_file() and p.name != 'manifest.json'}
             prepared.write(destination / 'manifest.json', info)
