@@ -70,6 +70,8 @@ Download the community-provided [game resources (Data and Legacy)](https://drive
 
 4. Return to the app after copying. If the resource prompt is still shown, tap **Retry**; the app automatically detects and loads the resources. The IPA includes precompiled Metal shaders.
 
+The IPA carries an ad-hoc request for `com.apple.developer.kernel.increased-memory-limit`. Your signing tool must enable the capability for the App ID and preserve it in the final signature and provisioning profile. Free accounts can support this with compatible signing tools; support varies by tool/version. This does not guarantee a fixed memory allowance or eliminate every crash. The IPA still requires signing before installation.
+
 Device requirements: A14 / M1 or newer, with at least 6 GB of memory.
 
 In LiveContainer on an M1 iPad, if opening the character-name keyboard crashes the app, try the `-ios18.ipa` variant, which also runs on iPadOS 26 and later.

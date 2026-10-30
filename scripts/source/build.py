@@ -10,6 +10,7 @@ import subprocess
 import sys
 import zipfile
 import time
+import tempfile
 
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
 import ci
@@ -82,7 +83,26 @@ def prepare_project(ios, payload, project, flags):
     return {name: ci.sha256(path) for name, path in resources.items()}
 
 
-def package_ipa(app, payload, destination, resources):
+MEMORY_ENTITLEMENT = 'com.apple.developer.kernel.increased-memory-limit'
+
+
+def sign_memory_request(app):
+    """Carry a request for re-signers; this is not an installable provisioning signature."""
+    requested = {MEMORY_ENTITLEMENT: True}
+    with tempfile.TemporaryDirectory() as directory:
+        entitlements = Path(directory) / 'memory.plist'
+        entitlements.write_bytes(plistlib.dumps(requested))
+        subprocess.run(['codesign', '--force', '--sign', '-', '--entitlements', str(entitlements),
+                        '--generate-entitlement-der', str(app)], check=True)
+    actual = plistlib.loads(subprocess.check_output(
+        ['codesign', '--display', '--entitlements', ':-', str(app)]))
+    if actual != requested:
+        raise ValueError('App signature does not carry the requested memory entitlement')
+    subprocess.run(['codesign', '--verify', '--deep', '--strict', str(app)], check=True)
+    return actual
+
+
+def package_ipa(app, payload, destination, resources, *, memory_request=False):
     """Archive the complete built app, then verify its prepared and source resources."""
     base = 'Payload/DmIOS.app/'
     guest_name = 'Frameworks/Guest.framework/Guest'
@@ -94,12 +114,14 @@ def package_ipa(app, payload, destination, resources):
     subprocess.run(['codesign', '-f', '-s', '-', str(guest)], check=True)
     subprocess.run(['codesign', '--verify', '--strict', str(guest)], check=True)
     guest_sha256 = ci.sha256(guest)
+    if memory_request:
+        sign_memory_request(app)
     with zipfile.ZipFile(destination, 'w', zipfile.ZIP_DEFLATED, compresslevel=1) as archive:
         for path in sorted(app.rglob('*')):
             relative = path.relative_to(app)
             guest_framework = relative.parts[:2] == ('Frameworks', 'Guest.framework')
             if (path.is_file() and path.name != 'embedded.mobileprovision'
-                    and ('_CodeSignature' not in relative.parts or guest_framework)):
+                    and ('_CodeSignature' not in relative.parts or guest_framework or memory_request)):
                 archive.write(path, base + relative.as_posix())
     with zipfile.ZipFile(destination) as final, zipfile.ZipFile(payload) as prepared:
         for name in prepared.namelist():
@@ -170,7 +192,8 @@ def main():
     destination=root/'outputs'/name
     base='Payload/DmIOS.app/'
     package_started=time.monotonic()
-    guest_sha256 = package_ipa(app, payload, destination, resources)
+    guest_sha256 = package_ipa(app, payload, destination, resources, memory_request=True)
+    native = (app / plist['CFBundleExecutable']).read_bytes()
     with zipfile.ZipFile(destination) as final:
         if final.read(base+plist['CFBundleExecutable'])!=native:
             raise ValueError('Native executable changed during IPA packaging')
@@ -183,6 +206,8 @@ def main():
                   release_tag=ci.CONFIG['release_tag'],
                   native_built_from_source=True,payload_verified=True,device_tested=False,signed=False,
                   guest_signature='ad-hoc',guest_sha256=guest_sha256,
+                  app_signature='ad-hoc',requested_entitlements={MEMORY_ENTITLEMENT: True},
+                  entitlement_signature_verified=True,requires_resigning=True,
                   runtime_resources_sha256=resources,
                   upstream_project=True,project_prepare_seconds=project_prepare_seconds,
                   ipa_package_seconds=round(time.monotonic()-package_started,2),
