@@ -1,0 +1,80 @@
+name: Recover original program inputs
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: write
+concurrency:
+  group: d2r-original-input-recovery
+  cancel-in-progress: false
+jobs:
+  recover:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+    env:
+      GH_TOKEN: ${{ github.token }}
+      DM_ROOT: ${{ github.workspace }}/.recovered-game
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      # Read only this audited historical input implementation, not legacy packaging.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: 1f2c0b416b6ece2cfdddcfd336b244b1500efb7d
+          path: historical-input
+          persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: jhaizhou-ops/d2r-mobile
+          ref: e2a0c9a9b5d65f6cd505e967e4760e2745e90ca8
+          path: historical-input/upstream
+          persist-credentials: false
+      - name: Check extraction input availability without logging key values
+        run: python3 scripts/maintenance/recover_input.py preflight
+      - name: Install extraction tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y aria2 p7zip-full clang
+          git clone --quiet https://github.com/SciresM/hactool.git "$RUNNER_TEMP/hactool"
+          git -C "$RUNNER_TEMP/hactool" checkout --quiet 1d64a83450e025622f3468c28fc4164dad2c5ef6
+          cp "$RUNNER_TEMP/hactool/config.mk.template" "$RUNNER_TEMP/hactool/config.mk"
+          make -C "$RUNNER_TEMP/hactool" -j 2 CC=clang
+          mkdir -p historical-input/.tools/bin
+          cp "$RUNNER_TEMP/hactool/hactool" historical-input/.tools/bin/
+          df -h .
+      - uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        id: raw
+        with:
+          path: historical-input/.game-downloads
+          key: recovered-original-downloads-v1
+      - name: Download and verify the historically documented base and update
+        run: python3 scripts/maintenance/recover_input.py download
+      - name: Check cache capacity without evicting existing inputs
+        id: budget
+        if: steps.raw.outputs.cache-hit != 'true'
+        run: python3 scripts/cache_budget.py historical-input/.game-downloads original
+      - uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        if: steps.budget.outputs.original == 'true'
+        with:
+          path: historical-input/.game-downloads
+          key: recovered-original-downloads-v1
+      - name: Preserve downloads as an artifact when cache space is insufficient
+        if: steps.raw.outputs.cache-hit != 'true' && steps.budget.outputs.original != 'true'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: original-downloads
+          path: historical-input/.game-downloads
+          include-hidden-files: true
+          compression-level: 0
+          retention-days: 30
+          if-no-files-found: error
+      - name: Extract and verify original programs and resource sizes
+        run: python3 scripts/maintenance/recover_input.py extract
+      - name: Preserve verified original executable inputs
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: original-exefs
+          path: recovered-input
+          retention-days: 90
+          if-no-files-found: error
