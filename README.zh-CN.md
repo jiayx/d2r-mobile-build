@@ -117,4 +117,4 @@ IPA 携带 `com.apple.developer.kernel.increased-memory-limit` 的 ad-hoc 权限
 
 ## Apple TV（实验性）
 
-已加入基于上游的 tvOS 构建工作流，首次原生构建受 README Data 文件的 Google Drive 下载配额限制。详见[要求、构建和安装说明](docs/TVOS.md)。面向第三代 Apple TV 4K（A15）、tvOS 26+，需要扩展手柄。未进行真机测试；存档位于系统可清理的 Caches。
+已加入基于上游的 tvOS 构建工作流，[v2.2.0 实验版](https://github.com/jiayx/d2r-mobile-build/releases/tag/v2.2.0-build.7.1-tvos) 已通过原生编译及打包校验。详见[要求、构建和安装说明](docs/TVOS.md)。面向第三代 Apple TV 4K（A15）、tvOS 26+，需要扩展手柄。未进行真机测试；存档位于系统可清理的 Caches。

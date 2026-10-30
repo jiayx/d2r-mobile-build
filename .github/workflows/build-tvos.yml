@@ -8,7 +8,7 @@ on:
         type: string
         required: true
       data_input:
-        description: Ordered Data parts JSON from docs/TVOS.md
+        description: Recovered shader run or ordered Data parts JSON (docs/TVOS.md)
         type: string
         required: true
       prepared_input:
