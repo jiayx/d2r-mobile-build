@@ -3,6 +3,7 @@ import importlib.util
 from pathlib import Path
 import tempfile
 import unittest
+import zipfile
 from unittest.mock import patch
 
 SCRIPT = Path(__file__).resolve().parents[1] / 'scripts/maintenance/refresh_programs.py'
@@ -40,3 +41,17 @@ class ProgramRefreshGuardTests(unittest.TestCase):
     def test_reused_table_generator_changes_require_preparation(self):
         with self.assertRaisesRegex(ValueError, 'asset dependency changed'):
             self.check_change('dm/ios/tools/gen_vault_table.py')
+
+
+class PreparedArchiveTests(unittest.TestCase):
+    def test_mac_shader_members_are_accepted_without_relaxing_ios(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            archive = root / 'input.zip'
+            with zipfile.ZipFile(archive, 'w') as output:
+                for i in range(40):
+                    output.writestr(f'msl/{i}.metallib', b'fixture')
+            refresh.extract_package(archive, root / 'mac', 'macos')
+            self.assertEqual(len(list((root / 'mac/msl').iterdir())), 40)
+            with self.assertRaisesRegex(ValueError, 'too many files'):
+                refresh.extract_package(archive, root / 'ios', 'ios')
