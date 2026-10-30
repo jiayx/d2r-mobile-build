@@ -1,4 +1,5 @@
 import copy
+import plistlib
 from pathlib import Path
 import shutil
 import sys
@@ -8,7 +9,7 @@ from unittest.mock import patch
 import zipfile
 
 sys.path.insert(0, str(Path(__file__).parents[1] / 'scripts'))
-from source.build import package_ipa, prepare_project
+from source.build import package_ipa, prepare_project, sign_memory_request, MEMORY_ENTITLEMENT
 from source.metal import verify_payload
 from fixtures import BASE, package
 
@@ -89,8 +90,9 @@ class IOSPackageTests(unittest.TestCase):
                     self.assertEqual(command, ['codesign', '--verify', '--strict', str(guest)])
             (app / '_CodeSignature').mkdir()
             (app / '_CodeSignature/CodeResources').write_bytes(b'outer app signature')
-            with patch('source.build.subprocess.run', side_effect=codesign):
-                package_ipa(app, payload, destination, resources)
+            with patch('source.build.subprocess.run', side_effect=codesign), patch('source.build.sign_memory_request') as sign_main:
+                package_ipa(app, payload, destination, resources, memory_request=True)
+                sign_main.assert_called_once_with(app)
             verify_payload(destination, info['payload'])
             with zipfile.ZipFile(destination) as archive:
                 self.assertEqual(archive.read(BASE + 'DmIOS'), b'compiled executable')
@@ -104,13 +106,31 @@ class IOSPackageTests(unittest.TestCase):
                                  unsigned_guest + b'fixture ad-hoc signature')
                 self.assertEqual(archive.read(BASE + 'Frameworks/Guest.framework/_CodeSignature/CodeResources'),
                                  b'framework signature resources')
-                self.assertNotIn(BASE + '_CodeSignature/CodeResources', archive.namelist())
+                self.assertEqual(archive.read(BASE + '_CodeSignature/CodeResources'), b'outer app signature')
                 self.assertTrue(resources.keys() <= set(archive.read(BASE + 'dm/shell_manifest.txt').decode().splitlines()))
                 self.assertEqual(len(archive.namelist()), len(set(archive.namelist())))
             (app / 'dm/shader_map.tsv').write_bytes(b'corrupt')
             guest.write_bytes(unsigned_guest)
             with patch('source.build.subprocess.run', side_effect=codesign), self.assertRaisesRegex(ValueError, 'runtime resource changed'):
                 package_ipa(app, payload, destination, resources)
+
+    def test_memory_signature_rejects_missing_or_extra_entitlements(self):
+        for actual in ({}, {MEMORY_ENTITLEMENT: False}, {MEMORY_ENTITLEMENT: True, 'get-task-allow': True}):
+            with patch('source.build.subprocess.run'), patch('source.build.subprocess.check_output', return_value=plistlib.dumps(actual)):
+                with self.assertRaisesRegex(ValueError, 'memory entitlement'):
+                    sign_memory_request(Path('/fixture.app'))
+
+    def test_memory_signature_requests_only_increased_limit(self):
+        requested = {MEMORY_ENTITLEMENT: True}
+        commands = []
+        def execute(command, *, check):
+            commands.append(command)
+            if '--entitlements' in command:
+                self.assertEqual(plistlib.loads(Path(command[command.index('--entitlements') + 1]).read_bytes()), requested)
+        with patch('source.build.subprocess.run', side_effect=execute), patch('source.build.subprocess.check_output', return_value=plistlib.dumps(requested)):
+            self.assertEqual(sign_memory_request(Path('/fixture.app')), requested)
+        self.assertIn('--generate-entitlement-der', commands[0])
+        self.assertEqual(commands[-1], ['codesign', '--verify', '--deep', '--strict', '/fixture.app'])
 
     def test_missing_upstream_table_or_new_resource_folder_stops_preparation(self):
         for missing in ('table', 'folder'):
