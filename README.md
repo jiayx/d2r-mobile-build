@@ -13,8 +13,8 @@ Build iOS and macOS apps from [d2r-mobile](https://github.com/jhaizhou-ops/d2r-m
 
    ```json
    {
-     "url": "https://ipfs.filebase.io/ipns/k51qzi5uqu5dkbfnqcjbd6jlgbckojtl4gu7m1kgu8esex1zg4oo485o5cjop2/D2RMobile-Prepared.zip",
-     "sha256_url": "https://ipfs.filebase.io/ipns/k51qzi5uqu5dkbfnqcjbd6jlgbckojtl4gu7m1kgu8esex1zg4oo485o5cjop2/Prepared-SHA256SUMS.txt"
+     "url": "https://ipfs.filebase.io/ipfs/bafybeidyux36pampsnbtwnvsoyzhvag542yhccam772euftusosnkhxcpu/D2RMobile-Prepared.zip",
+     "sha256_url": "https://ipfs.filebase.io/ipfs/bafybeidyux36pampsnbtwnvsoyzhvag542yhccam772euftusosnkhxcpu/Prepared-SHA256SUMS.txt"
    }
    ```
 
@@ -22,12 +22,12 @@ Build iOS and macOS apps from [d2r-mobile](https://github.com/jhaizhou-ops/d2r-m
 
    ```json
    {
-     "url": "https://ipfs.filebase.io/ipfs/bafybeihkvz24tivc4hqtlruqlagtrtgcanuzj3o4fgrfjgolxui4hzvni4/D2RMobile-MacPrepared.zip",
-     "sha256_url": "https://ipfs.filebase.io/ipfs/bafybeihkvz24tivc4hqtlruqlagtrtgcanuzj3o4fgrfjgolxui4hzvni4/MacPrepared-SHA256SUMS.txt"
+     "url": "https://ipfs.filebase.io/ipfs/bafybeidyux36pampsnbtwnvsoyzhvag542yhccam772euftusosnkhxcpu/D2RMobile-MacPrepared.zip",
+     "sha256_url": "https://ipfs.filebase.io/ipfs/bafybeidyux36pampsnbtwnvsoyzhvag542yhccam772euftusosnkhxcpu/MacPrepared-SHA256SUMS.txt"
    }
    ```
 
-   The prepared packages in this configuration are provided by community contributors: approximately **290 MB for iOS** and **299 MB for macOS**.
+   The prepared packages are approximately **287 MB for iOS** and **299 MB for macOS**.
 
 3. Click **Run workflow** to start the build. Downloading, compiling, packaging and publishing typically takes **about 6 minutes for iOS** or **7 minutes for macOS**.
 
@@ -69,6 +69,8 @@ Download the community-provided [game resources (Data and Legacy)](https://drive
    ```
 
 4. Return to the app after copying. If the resource prompt is still shown, tap **Retry**; the app automatically detects and loads the resources. The IPA includes precompiled Metal shaders.
+
+The IPA carries an ad-hoc request for `com.apple.developer.kernel.increased-memory-limit`. Your signing tool must enable the capability for the App ID and preserve it in the final signature and provisioning profile. Free accounts can support this with compatible signing tools; support varies by tool/version. This does not guarantee a fixed memory allowance or eliminate every crash. The IPA still requires signing before installation.
 
 Device requirements: A14 / M1 or newer, with at least 6 GB of memory.
 

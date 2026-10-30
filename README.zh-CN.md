@@ -13,8 +13,8 @@
 
    ```json
    {
-     "url": "https://ipfs.filebase.io/ipns/k51qzi5uqu5dkbfnqcjbd6jlgbckojtl4gu7m1kgu8esex1zg4oo485o5cjop2/D2RMobile-Prepared.zip",
-     "sha256_url": "https://ipfs.filebase.io/ipns/k51qzi5uqu5dkbfnqcjbd6jlgbckojtl4gu7m1kgu8esex1zg4oo485o5cjop2/Prepared-SHA256SUMS.txt"
+     "url": "https://ipfs.filebase.io/ipfs/bafybeidyux36pampsnbtwnvsoyzhvag542yhccam772euftusosnkhxcpu/D2RMobile-Prepared.zip",
+     "sha256_url": "https://ipfs.filebase.io/ipfs/bafybeidyux36pampsnbtwnvsoyzhvag542yhccam772euftusosnkhxcpu/Prepared-SHA256SUMS.txt"
    }
    ```
 
@@ -22,12 +22,12 @@
 
    ```json
    {
-     "url": "https://ipfs.filebase.io/ipfs/bafybeihkvz24tivc4hqtlruqlagtrtgcanuzj3o4fgrfjgolxui4hzvni4/D2RMobile-MacPrepared.zip",
-     "sha256_url": "https://ipfs.filebase.io/ipfs/bafybeihkvz24tivc4hqtlruqlagtrtgcanuzj3o4fgrfjgolxui4hzvni4/MacPrepared-SHA256SUMS.txt"
+     "url": "https://ipfs.filebase.io/ipfs/bafybeidyux36pampsnbtwnvsoyzhvag542yhccam772euftusosnkhxcpu/D2RMobile-MacPrepared.zip",
+     "sha256_url": "https://ipfs.filebase.io/ipfs/bafybeidyux36pampsnbtwnvsoyzhvag542yhccam772euftusosnkhxcpu/MacPrepared-SHA256SUMS.txt"
    }
    ```
 
-   配置中的预处理包由热心网友提供，iOS 约 **290 MB**，macOS 约 **299 MB**。
+   预处理包大小：iOS 约 **287 MB**，macOS 约 **299 MB**。
 
 3. 点击 **Run workflow** 开始构建。从下载预处理包到编译、打包并发布，iOS 预计约 **6 分钟**，macOS 约 **7 分钟**。
 
@@ -69,6 +69,8 @@
    ```
 
 4. 拷贝完成后回到应用，若停在资源提示页，点击“重试”，应用会自动检测并加载资源。IPA 已包含预编译 Metal 着色器。
+
+IPA 携带 `com.apple.developer.kernel.increased-memory-limit` 的 ad-hoc 权限请求。重签工具需为 App ID 开启该能力，并在最终签名和描述文件中保留它；免费账号也可通过支持该能力的工具使用，具体取决于工具和版本。这不保证固定的内存额度，也不能消除所有闪退。安装前仍需重新签名。
 
 设备要求：A14 / M1 及更新芯片，至少 6 GB 内存。
 
