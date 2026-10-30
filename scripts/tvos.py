@@ -20,7 +20,7 @@ from source.publish import gh, release_info, upload_verified
 
 def plan():
     data = tvos_inputs.configuration()
-    identity = hashlib.sha256(data['sha256'].encode()).hexdigest()
+    identity = hashlib.sha256(json.dumps(data, sort_keys=True).encode()).hexdigest()
     with open(os.environ['GITHUB_OUTPUT'], 'a') as out:
         out.write('input_revision=' + identity + '\n')
 

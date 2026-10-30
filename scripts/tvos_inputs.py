@@ -51,6 +51,10 @@ class SplitReader(io.RawIOBase):
 
 def configuration():
     data = json.loads(os.environ['DATA_INPUT'])
+    if isinstance(data, dict) and set(data) == {'recovery_run_id'}:
+        if not isinstance(data['recovery_run_id'], str) or not re.fullmatch(r'[1-9][0-9]*', data['recovery_run_id']):
+            raise ValueError('Invalid recovery run ID')
+        return data
     if not isinstance(data, dict) or set(data) != {'parts', 'sha256'}:
         raise ValueError('data_input requires parts and combined sha256')
     parts = data['parts']
@@ -68,6 +72,22 @@ def configuration():
 def download():
     data = configuration()
     root = ci.ROOT / '.tvos-data-downloads'
+    if 'recovery_run_id' in data:
+        run = data['recovery_run_id']
+        repo = os.environ['GITHUB_REPOSITORY']
+        result = json.loads(subprocess.check_output(['gh', 'api', 'repos/' + repo + '/actions/runs/' + run]))
+        if result['conclusion'] != 'success' or result['path'] != '.github/workflows/recover-input.yml':
+            raise ValueError('Expected successful original input recovery')
+        root.mkdir(parents=True, exist_ok=True)
+        directory = root / ('recovery-' + run)
+        if not directory.exists():
+            subprocess.run(['gh', 'run', 'download', run, '--repo', repo, '--name', 'tvos-shader-input',
+                            '--dir', str(directory)], check=True)
+        report = json.loads((directory / 'shader-input-report.json').read_text())
+        archive = directory / 'D2RMobile-TVShaderInput.zip'
+        if report['bytes'] != archive.stat().st_size or report['sha256'] != ci.sha256(archive):
+            raise ValueError('Recovered shader input checksum mismatch')
+        return [archive]
     paths = []
     for index, part in enumerate(data['parts']):
         path = root / ('part-%03d' % index)
@@ -92,6 +112,10 @@ def extract_shader_packs(dm, mac, work, paths, environment):
                    and line.split('|')[9].endswith('.bin')]
     if not shader_rows:
         raise ValueError('No original shader pack addresses found')
+    packs = work / 'build/cache/dm/dmsh'
+    if len(paths) == 1 and paths[0].name == 'D2RMobile-TVShaderInput.zip':
+        import_shader_packs(paths[0], manifest, packs)
+        return romfs, packs
     needed = set()
     for row in shader_rows:
         key = bytes.fromhex(row[6]); needed.add(f'{key[9]:02d}-{key[10]:08d}.data')
@@ -112,6 +136,41 @@ def extract_shader_packs(dm, mac, work, paths, environment):
                         'data:' + row[9], str(packs / name)], env=env, check=True,
                        stdout=subprocess.DEVNULL)
     return romfs, packs
+
+
+
+def import_shader_packs(archive, manifest, packs):
+    rows = [line.split('|') for line in manifest.splitlines()
+            if len(line.split('|')) >= 11 and '/shaders/' in line.split('|')[9].lower()
+            and line.split('|')[9].endswith('.bin')]
+    expected = {Path(row[9]).name: row for row in rows}
+    if not expected or len(expected) != len(rows):
+        raise ValueError('Invalid shader manifest')
+    with zipfile.ZipFile(archive) as source:
+        info = json.loads(source.read('manifest.json'))
+        if (info.get('format') != 'd2r-mobile-tv-shaders' or info.get('schema_version') != 1
+                or info['resource_manifest_sha256'] != hashlib.sha256(manifest.encode()).hexdigest()
+                or set(info['files']) != set(expected)):
+            raise ValueError('Shader inputs do not match prepared resource manifest')
+        names = source.namelist()
+        if len(names) != len(set(names)) or set(names) != {'manifest.json'} | {'packs/' + n for n in expected}:
+            raise ValueError('Unexpected shader input files')
+        if sum(m.file_size for m in source.infolist()) > 512 * 1024**2:
+            raise ValueError('Shader input exceeds size limit')
+        # Validate all files against original decoded CKeys before writing any.
+        values = {}
+        for name, row in expected.items():
+            value = source.read('packs/' + name)
+            record = info['files'][name]
+            if (len(value) != int(row[5]) or len(value) != record['bytes']
+                    or hashlib.md5(value).hexdigest() != row[4]
+                    or record['md5'] != row[4]
+                    or hashlib.sha256(value).hexdigest() != record['sha256']):
+                raise ValueError('Original shader content checksum mismatch: ' + name)
+            values[name] = value
+        packs.mkdir(parents=True, exist_ok=True)
+        for name, value in values.items():
+            (packs / name).write_bytes(value)
 
 
 def translate_from_prepared():

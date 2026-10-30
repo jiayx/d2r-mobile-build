@@ -14,5 +14,4 @@ jobs:
       publish: true
       prepared_input: '{"url": "https://ipfs.filebase.io/ipfs/bafybeidyux36pampsnbtwnvsoyzhvag542yhccam772euftusosnkhxcpu/D2RMobile-Prepared.zip", "sha256_url": "https://ipfs.filebase.io/ipfs/bafybeidyux36pampsnbtwnvsoyzhvag542yhccam772euftusosnkhxcpu/Prepared-SHA256SUMS.txt"}'
       macos_input: '{"url": "https://ipfs.filebase.io/ipfs/bafybeidyux36pampsnbtwnvsoyzhvag542yhccam772euftusosnkhxcpu/D2RMobile-MacPrepared.zip", "sha256_url": "https://ipfs.filebase.io/ipfs/bafybeidyux36pampsnbtwnvsoyzhvag542yhccam772euftusosnkhxcpu/MacPrepared-SHA256SUMS.txt"}'
-      data_input: '{"parts": [{"url": "https://drive.google.com/file/d/1xcXQwIYCq1Lugqwj-P7B2x9X-cu3dDKy/view", "sha256": "e383d983b8f504b03b31858241ee219d3a229c1e11f8bbfabeeb14f7087d7870"}, {"url": "https://drive.google.com/file/d/1RtHduJ_ujrWnhFJiDTYfHCVQfJM2bWbs/view", "sha256": "d35bb84234ad5ea858504cddcb06150cb61b84aabf15127bf5e23dc45e0ad2ac"}, {"url": "https://drive.google.com/file/d/1oaGEP0cn0U6YRLaERV9kkSZHi5VWsjRf/view", "sha256": "135003ac568178ce47c9c4d8dba37c094ea828583825e6964b27e3bfa6444588"}], "sha256": "0f788dbf4019ea934949c0ba268a6649980faef99466fe188d5d0823654cf494"}'
-# Retry with downloader diagnostics preserved.
+      data_input: '{"recovery_run_id":"41077361816"}'

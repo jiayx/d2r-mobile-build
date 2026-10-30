@@ -26,6 +26,20 @@ Available matching input/generation caches are restored, with space checks befor
 
 复用匹配的输入和生成缓存，保存前检查空间，不删除其他缓存。首次运行在 Actions 下载约 5.43 GB Data，不下载游戏文件到本机。成功后发布实验性预发布，包含未签名 IPA、TV 覆盖层 ZIP、校验清单和构建报告，不替换最新稳定 iOS/Mac Release。TV 按上游方式内嵌程序段；iOS Guest ad-hoc 签名流程不变。
 
+### Recovered shader input / 已恢复的着色器输入
+
+For this repository, `data_input` also accepts a successful `recover-input.yml` run containing the `tvos-shader-input` artifact:
+
+本仓库也可使用成功的 `recover-input.yml` 运行所保存的 `tvos-shader-input` artifact：
+
+```json
+{"recovery_run_id":"41077361816"}
+```
+
+This path downloads only shader inputs within Actions and validates them against the prepared resource manifest's original content checksums. Artifacts expire after 90 days; regenerate from the original input cache if unavailable. No external build server is used.
+
+此路径仅在 Actions 下载着色器输入，并逐个核对预处理资源清单中的原始内容校验值。Artifact 保留 90 天；过期后需从原始输入缓存重新生成。不使用外部构建服务器。
+
 ### Existing Data input / 现有 Data 输入
 
 ```json

@@ -150,7 +150,10 @@ jobs:
           path: .tvos-work/build
           key: tvos-generation-v1-${{ hashFiles('scripts/tvos*.py') }}-${{ steps.identity.outputs.source_commit }}-${{ steps.xcode.outputs.toolchain }}-${{ steps.game.outputs.input_revision }}
       - name: Build upstream DmTV and TV Legacy overlay
-        run: python scripts/tvos.py build
+        run: |
+          set -o pipefail
+          mkdir -p outputs
+          python -u scripts/tvos.py build 2>&1 | tee outputs/tvos-generation.log
       - name: Check generation cache space
         id: generation-budget
         if: steps.generation.outputs.cache-hit != 'true'
@@ -181,6 +184,8 @@ jobs:
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
           name: tvos-build-log
-          path: .tvos-work/run/tvos/build.log
+          path: |
+            .tvos-work/run/tvos/build.log
+            outputs/tvos-generation.log
           if-no-files-found: ignore
           retention-days: 3
