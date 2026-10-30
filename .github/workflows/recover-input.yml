@@ -1,6 +1,11 @@
 name: Recover original program inputs
 on:
   workflow_dispatch:
+    inputs:
+      key_archive:
+        description: 'Optional replacement extraction archive JSON: HTTPS url and sha256'
+        type: string
+        default: ''
 permissions:
   contents: read
   actions: write
@@ -12,6 +17,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 180
     env:
+      RECOVERY_KEY_ARCHIVE: ${{ inputs.key_archive }}
       GH_TOKEN: ${{ github.token }}
       DM_ROOT: ${{ github.workspace }}/.recovered-game
     steps:

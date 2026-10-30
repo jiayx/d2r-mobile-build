@@ -21,6 +21,14 @@ manifests = [json.loads(block) for block in blocks]
 manifests = [m for m in manifests if m.get('kind') == 'packages' and 'key_archive' in m]
 if len(manifests) != 1:
     raise ValueError('Expected one historical package input manifest')
+override = os.environ.get('RECOVERY_KEY_ARCHIVE', '').strip()
+if override:
+    source = json.loads(override)
+    if (not isinstance(source, dict) or set(source) != {'url', 'sha256'}
+            or not isinstance(source['url'], str) or not source['url'].startswith('https://')
+            or not re.fullmatch(r'[a-f0-9]{64}', source.get('sha256', ''))):
+        raise ValueError('Recovery key archive requires HTTPS url and SHA-256')
+    manifests[0]['key_archive'] = source
 os.environ['GAME_INPUT_MANIFEST'] = json.dumps(manifests[0])
 operation = sys.argv[1]
 if operation == 'preflight':
