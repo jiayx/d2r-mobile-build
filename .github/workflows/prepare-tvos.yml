@@ -1,0 +1,114 @@
+name: Prepare TV input
+on:
+  workflow_dispatch:
+    inputs:
+      prepared_input:
+        description: Existing iOS prepared JSON
+        type: string
+        required: true
+      macos_input:
+        description: Existing Mac prepared JSON
+        type: string
+        required: true
+      data_input:
+        description: Recovered shader run JSON
+        type: string
+        required: true
+      source_ref:
+        description: Empty selects latest official release
+        type: string
+        default: ''
+  workflow_call:
+    inputs:
+      prepared_input:
+        description: Existing iOS prepared JSON
+        type: string
+        required: true
+      macos_input:
+        description: Existing Mac prepared JSON
+        type: string
+        required: true
+      data_input:
+        description: Recovered shader run JSON
+        type: string
+        required: true
+      source_ref:
+        description: Empty selects latest official release
+        type: string
+        default: ''
+permissions:
+  contents: write
+  actions: read
+jobs:
+  prepare:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      GH_TOKEN: ${{ github.token }}
+      SOURCE_REPOSITORY: jhaizhou-ops/d2r-mobile
+      DATA_INPUT: ${{ inputs.data_input }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Select the latest release or requested source
+        id: source
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SOURCE_REF: ${{ inputs.source_ref }}
+        run: python3 scripts/source/resolve.py
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: ${{ env.SOURCE_REPOSITORY }}
+          token: ${{ github.token }}
+          ref: ${{ steps.source.outputs.ref }}
+          fetch-depth: 0
+          path: upstream
+          persist-credentials: false
+      - name: Record the selected source and build identity
+        id: identity
+        run: python3 scripts/source/configure.py
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: requirements.txt
+      - name: Install the archive downloader
+        run: python -m pip install -r requirements.txt
+      - name: Validate Data input configuration
+        id: game
+        run: python -c "import sys; sys.path.insert(0, 'scripts'); import tvos_inputs; tvos_inputs.configuration()"
+      - name: Download recovered shaders
+        run: python -c "import sys; sys.path.insert(0, 'scripts'); import tvos_inputs; tvos_inputs.download()"
+      - name: Resolve iOS prepared input for Legacy metadata
+        id: input
+        env:
+          PREPARED_INPUT: ${{ inputs.prepared_input }}
+        run: python scripts/source/prepared.py resolve
+      - name: Restore existing iOS input cache
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
+        with:
+          path: .prepared-downloads
+          key: prepared-input-v1-${{ steps.input.outputs.input_revision }}
+      - name: Verify or download iOS prepared input
+        env:
+          PREPARED_INPUT: ${{ inputs.prepared_input }}
+        run: python scripts/source/prepared.py download
+      - name: Resolve Mac prepared input
+        id: macinput
+        env:
+          PREPARED_INPUT: ${{ inputs.macos_input }}
+        run: python scripts/macos.py plan-prepared
+      - name: Restore Mac prepared input
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
+        with:
+          path: .macos-downloads
+          key: macos-input-v1-${{ steps.macinput.outputs.input_revision }}
+      - name: Download and verify Mac prepared input
+        env:
+          PREPARED_INPUT: ${{ inputs.macos_input }}
+        run: python scripts/macos.py download-prepared
+      - name: Create and verify minimal TV input
+        run: python scripts/tvos_prepared.py create
+      - name: Publish immutable TV input
+        run: python scripts/tvos_prepared.py publish

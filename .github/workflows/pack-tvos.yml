@@ -2,17 +2,11 @@ name: Reusable experimental tvOS build
 on:
   workflow_call:
     inputs:
-      macos_input:
-        type: string
-        required: true
-      data_input:
-        type: string
-        required: true
       publish:
         type: boolean
         default: true
       prepared_input:
-        description: iOS prepared JSON for matching Legacy pack metadata
+        description: TV prepared JSON (url and sha256 or sha256_url)
         type: string
         required: true
       source_repository:
@@ -36,7 +30,7 @@ jobs:
     runs-on: macos-26
     timeout-minutes: 120
     env:
-      DATA_INPUT: ${{ inputs.data_input }}
+      PREPARED_INPUT: ${{ inputs.prepared_input }}
       SOURCE_REPOSITORY: ${{ inputs.source_repository }}
       GH_TOKEN: ${{ github.token }}
       HOMEBREW_NO_AUTO_UPDATE: '1'
@@ -84,55 +78,27 @@ jobs:
           cache-dependency-path: requirements.txt
       - name: Install the archive downloader
         run: python -m pip install -r requirements.txt
-      - name: Validate Data input configuration
+      - name: Resolve TV prepared input
         id: game
         run: python scripts/tvos.py plan
-      - name: Restore Data archive parts
+      - name: Restore TV prepared download
         id: archive
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
         with:
-          path: .tvos-data-downloads
-          key: tvos-data-v1-${{ steps.game.outputs.input_revision }}
-      - name: Verify or download Data archive parts
+          path: .tvos-prepared-downloads
+          key: tvos-prepared-v1-${{ steps.game.outputs.input_revision }}
+      - name: Verify or download TV prepared input
         run: python scripts/tvos.py download
-      - name: Check archive cache space
+      - name: Check input cache space
         id: budget
         if: steps.archive.outputs.cache-hit != 'true'
-        run: python scripts/cache_budget.py .tvos-data-downloads archive
-      - name: Preserve Data archive parts
+        run: python scripts/cache_budget.py .tvos-prepared-downloads archive
+      - name: Preserve TV input
         if: steps.budget.outputs.archive == 'true'
         uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
         with:
-          path: .tvos-data-downloads
+          path: .tvos-prepared-downloads
           key: ${{ steps.archive.outputs.cache-primary-key }}
-      - name: Resolve iOS prepared input for Legacy metadata
-        id: input
-        env:
-          PREPARED_INPUT: ${{ inputs.prepared_input }}
-        run: python scripts/source/prepared.py resolve
-      - name: Restore existing iOS input cache
-        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
-        with:
-          path: .prepared-downloads
-          key: prepared-input-v1-${{ steps.input.outputs.input_revision }}
-      - name: Verify or download iOS prepared input
-        env:
-          PREPARED_INPUT: ${{ inputs.prepared_input }}
-        run: python scripts/source/prepared.py download
-      - name: Resolve Mac prepared input
-        id: macinput
-        env:
-          PREPARED_INPUT: ${{ inputs.macos_input }}
-        run: python scripts/macos.py plan-prepared
-      - name: Restore Mac prepared input
-        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
-        with:
-          path: .macos-downloads
-          key: macos-input-v1-${{ steps.macinput.outputs.input_revision }}
-      - name: Download and verify Mac prepared input
-        env:
-          PREPARED_INPUT: ${{ inputs.macos_input }}
-        run: python scripts/macos.py download-prepared
       - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68
         with:
           dotnet-version: '10.0.x'
