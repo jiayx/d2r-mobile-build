@@ -4,6 +4,7 @@ import os
 from pathlib import Path
 import shutil
 import sys
+import time
 import zipfile
 
 import ci
@@ -87,7 +88,10 @@ def create():
     with zipfile.ZipFile(package, 'w', zipfile.ZIP_DEFLATED, compresslevel=6) as z:
         for path in sorted(stage.rglob('*')):
             if path.is_file():
-                z.write(path, path.relative_to(stage).as_posix())
+                member = zipfile.ZipInfo(path.relative_to(stage).as_posix(), (1980, 1, 1, 0, 0, 0))
+                member.compress_type = zipfile.ZIP_DEFLATED
+                member.external_attr = 0o100644 << 16
+                z.writestr(member, path.read_bytes(), compresslevel=6)
     report = {'name': package.name, 'bytes': package.stat().st_size, 'sha256': ci.sha256(package),
               'previous_input_bytes': sum(p.stat().st_size for p in
                  (root / '.prepared-downloads/prepared-input.archive', root / '.macos-downloads/prepared-input.archive', paths[0])),
@@ -128,6 +132,12 @@ def publish():
         gh('release', 'create', tag, '--repo', repo, '--target', os.environ['GITHUB_SHA'],
            '--title', 'TV prepared build input', '--notes', 'Verified TV build input; not an installable app.',
            '--draft', '--prerelease')
+    for attempt in range(6):
+        if release_info(repo, tag) is not None:
+            break
+        time.sleep(2)
+    else:
+        raise RuntimeError('New draft release is not yet visible to the release API')
     upload_verified(repo, tag, [out / report['name'], out / 'TVPrepared-SHA256SUMS.txt', out / 'tvos-prepared-report.json'])
     gh('release', 'edit', tag, '--repo', repo, '--draft=false', '--prerelease', '--latest=false')
     print('TV prepared input: https://github.com/' + repo + '/releases/tag/' + tag)
