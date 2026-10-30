@@ -1,0 +1,39 @@
+name: Build Apple TV (experimental)
+run-name: tvOS source build · ${{ inputs.source_ref || 'latest release' }}
+on:
+  workflow_dispatch:
+    inputs:
+      macos_input:
+        description: macOS prepared JSON from README
+        type: string
+        required: true
+      data_input:
+        description: Ordered Data parts JSON from docs/TVOS.md
+        type: string
+        required: true
+      prepared_input:
+        description: iOS prepared JSON for Legacy metadata (see docs/TVOS.md)
+        type: string
+        required: true
+      source_repository:
+        description: Upstream source repository or your fork
+        type: string
+        default: jhaizhou-ops/d2r-mobile
+      source_ref:
+        description: Branch, tag or commit (empty uses the latest release)
+        type: string
+        default: ''
+permissions:
+  contents: write
+  actions: write
+jobs:
+  build:
+    uses: jiayx/d2r-mobile-build/.github/workflows/pack-tvos.yml@main
+    with:
+      macos_input: ${{ inputs.macos_input }}
+      data_input: ${{ inputs.data_input }}
+      prepared_input: ${{ inputs.prepared_input }}
+      source_repository: ${{ inputs.source_repository }}
+      source_ref: ${{ inputs.source_ref }}
+    secrets:
+      SOURCE_TOKEN: ${{ secrets.SOURCE_TOKEN }}

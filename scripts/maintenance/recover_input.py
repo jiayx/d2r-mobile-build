@@ -53,5 +53,35 @@ elif operation == 'extract':
         'nso_sha256': ci.CONFIG['nso_sha256'],
         'input_identity': ci.download_identity(manifests[0]),
     }, indent=2) + '\n')
+elif operation == 'shaders':
+    import hashlib
+    import zipfile
+    sys.path.insert(0, str(old / 'upstream/dm/tools'))
+    import dmx
+    dmx.ROOT = str(ci.GAME / 'RomFS/data')
+    rows = [row for row in dmx.index().values()
+            if '/shaders/' in row[9].lower() and row[9].endswith('.bin')]
+    if not rows:
+        raise ValueError('No shader packs in verified original input')
+    destination = root / 'recovered-shaders'
+    destination.mkdir(exist_ok=True)
+    archive = destination / 'D2RMobile-TVShaderInput.zip'
+    files = {}
+    with zipfile.ZipFile(archive, 'w', zipfile.ZIP_DEFLATED, compresslevel=6) as out:
+        for row in rows:
+            name = Path(row[9]).name
+            if name in files:
+                raise ValueError('Duplicate shader filename')
+            data = dmx.read_row(row)
+            files[name] = {'bytes': len(data), 'sha256': hashlib.sha256(data).hexdigest(), 'md5': row[4]}
+            out.writestr('packs/' + name, data)
+        out.writestr('manifest.json', json.dumps({
+            'format': 'd2r-mobile-tv-shaders', 'schema_version': 1,
+            'resource_manifest_sha256': ci.sha256(ci.GAME / 'RomFS/data/build_manifest.psv'),
+            'files': files}, indent=2))
+    report = {'name': archive.name, 'bytes': archive.stat().st_size,
+              'sha256': ci.sha256(archive), 'shader_packs': len(files)}
+    (destination / 'shader-input-report.json').write_text(json.dumps(report, indent=2))
+    print(json.dumps(report))
 else:
     raise ValueError('Unknown recovery operation')
