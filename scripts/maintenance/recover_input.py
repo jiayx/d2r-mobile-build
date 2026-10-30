@@ -1,5 +1,4 @@
 """Run only the historically documented input download/extraction operations."""
-import hashlib
 import importlib.util
 import json
 import os
@@ -8,10 +7,15 @@ import re
 import sys
 
 root = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(root / 'scripts'))
+from input_config import download_file
+
 old = root / 'historical-input'
 spec = importlib.util.spec_from_file_location('historical_ci', old / 'scripts/ci.py')
 ci = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(ci)
+# Use main's checksum-verifying Drive downloader for the historical URL.
+ci.download = download_file
 blocks = re.findall(r'```json\s*(.*?)```', (old / 'README.md').read_text(), re.S)
 manifests = [json.loads(block) for block in blocks]
 manifests = [m for m in manifests if m.get('kind') == 'packages' and 'key_archive' in m]
