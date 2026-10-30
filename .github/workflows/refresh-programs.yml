@@ -1,0 +1,86 @@
+name: Refresh prepared Apple programs
+on:
+  workflow_dispatch:
+    inputs:
+      original_run_id:
+        description: 'Successful recovery run containing original-exefs'
+        type: string
+        required: true
+      source_ref:
+        description: 'Upstream tag; empty selects latest stable release'
+        type: string
+        default: ''
+      ios_prepared_input:
+        description: 'Existing iOS prepared input JSON'
+        type: string
+        required: true
+      macos_prepared_input:
+        description: 'Existing macOS prepared input JSON'
+        type: string
+        required: true
+permissions:
+  contents: write
+  actions: read
+concurrency:
+  group: d2r-refresh-apple-programs
+  cancel-in-progress: false
+jobs:
+  refresh:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    env:
+      GH_TOKEN: ${{ github.token }}
+      SOURCE_REPOSITORY: jhaizhou-ops/d2r-mobile
+      IOS_PREPARED_INPUT: ${{ inputs.ios_prepared_input }}
+      MACOS_PREPARED_INPUT: ${{ inputs.macos_prepared_input }}
+      TOOLS_COMMIT: ${{ github.sha }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Select upstream source
+        id: source
+        env:
+          SOURCE_REF: ${{ inputs.source_ref }}
+        run: python3 scripts/source/resolve.py
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: jhaizhou-ops/d2r-mobile
+          ref: ${{ steps.source.outputs.ref }}
+          fetch-depth: 0
+          path: upstream
+          persist-credentials: false
+      - name: Record source identity
+        run: python3 scripts/source/configure.py
+      - name: Require completed input recovery
+        env:
+          ORIGINAL_RUN_ID: ${{ inputs.original_run_id }}
+        run: |
+          python3 - <<'PY'
+          import json, os, re, subprocess
+          run = os.environ['ORIGINAL_RUN_ID']
+          if not re.fullmatch(r'[1-9][0-9]*', run):
+              raise ValueError('Invalid recovery run ID')
+          result = json.loads(subprocess.check_output(['gh', 'api', 'repos/' + os.environ['GITHUB_REPOSITORY'] + '/actions/runs/' + run]))
+          if result['conclusion'] != 'success' or result['path'] != '.github/workflows/recover-input.yml':
+              raise ValueError('Expected a successful original input recovery run')
+          PY
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: original-exefs
+          run-id: ${{ inputs.original_run_id }}
+          github-token: ${{ github.token }}
+          path: recovered-input
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.12'
+      - name: Install rewriter dependencies
+        run: python -m pip install -r requirements.txt lz4==4.4.5 capstone==5.0.6
+      - name: Regenerate programs and publish verified prepared inputs
+        run: python scripts/maintenance/refresh_programs.py
+      - name: Preserve program generation report
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: program-refresh-report
+          path: outputs/program-refresh-report.json
+          if-no-files-found: error
