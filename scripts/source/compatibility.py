@@ -32,6 +32,9 @@ COMPATIBLE_GENERATORS = {
         # Android/OHOS branches preserve Apple instructions; the loader accepts
         # old fixup tables without TARGET as Apple (0).
         'f23802979ceeeab8267b724b2d7f1a568b900777eb8718a0471a41317dc744ee',
+        '893460fffdc4a130ada06bd01fbf48f9afad920ef1e809cf0a2c4c57e81a920b',
+        # Unsupported builds get a clear error; supported build output is unchanged.
+        'cd205bcd22eb9d015c58f0fea4d727a2f7e2d16591236990fdfcb7f5366f80ce',
     },
 }
 
