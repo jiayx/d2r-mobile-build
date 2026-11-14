@@ -51,7 +51,9 @@
 | `D2RMobile-<版本>-build.<运行编号>.<尝试次数>-ios18.ipa` | iOS 18–25 |
 | `SHA256SUMS.txt`、`build-report.json` | 校验值与构建详情 |
 
-下载热心网友提供的[配套游戏资源（Data 和 Legacy）](https://drive.google.com/drive/folders/1lfjUghi54ohyDxYEtNuEjtGUZyGovaIA)：
+原社区 Google Drive 的 Data 和 Legacy 下载已失效，目前没有确认可用的替代下载，补档情况见 [#36](https://github.com/jiayx/d2r-mobile-build/issues/36)。已有匹配的 Data 和 Legacy 可以继续复用；安装运行需要这些资源，应用下载不包含它们。
+
+此前分享的资源包：
 
 | 压缩包 | 下载大小 | 用途 |
 |---|---|---|
@@ -59,8 +61,8 @@
 | `Legacy-Device-Pack.zip` | 1.02 GB | A14–A16 设备需要的补充贴图，解压后为 `Legacy Device Pack` 文件夹 |
 
 1. 使用 [Sideloadly](https://sideloadly.io/)、[iloader](https://iloader.app/)、[AltStore Classic](https://faq.altstore.io/altstore-classic/your-altstore) 或 [SideStore](https://sidestore.io/) 签名安装 IPA，安装后先打开一次应用。
-2. 从上方链接下载配套 Data。分卷形式需下载全部 `.001`、`.002`、`.003`，用支持分卷的解压工具打开 `.001`，将解压得到的整个 `D2R Mobile Resources` 文件夹拷到“文件”App →“我的 iPhone”→“D2R Mobile”；也可连接 Mac，在 Finder → 手机 →“文件”中拖入该应用。
-3. A14–A16 设备另从同一链接下载 `Legacy-Device-Pack.zip`，解压后将整个 `Legacy Device Pack` 文件夹与资源文件夹并排导入。A17 Pro 及更新芯片、M 系列 iPad 使用标准 Data。
+2. 使用已有的配套 Data。分卷形式需备齐全部 `.001`、`.002`、`.003`，用支持分卷的解压工具打开 `.001`，将解压得到的整个 `D2R Mobile Resources` 文件夹拷到“文件”App →“我的 iPhone”→“D2R Mobile”；也可连接 Mac，在 Finder → 手机 →“文件”中拖入该应用。
+3. A14–A16 设备另需匹配的 `Legacy-Device-Pack.zip`，解压后将整个 `Legacy Device Pack` 文件夹与资源文件夹并排导入。A17 Pro 及更新芯片、M 系列 iPad 使用标准 Data。
 
    在“文件”App →“我的 iPhone”→“D2R Mobile”中，两个文件夹应处于同一级：
 
@@ -95,7 +97,7 @@ IPA 携带 `com.apple.developer.kernel.increased-memory-limit` 的 ad-hoc 权限
 | `Mac-SHA256SUMS.txt`、`macos-build-report.json` | 校验值与构建详情 |
 
 1. 解压 ZIP，将 `.app` 拖入“应用程序”。
-2. 从[游戏资源目录](https://drive.google.com/drive/folders/1lfjUghi54ohyDxYEtNuEjtGUZyGovaIA)下载全部三个 `D2R-Mobile-Resources.zip` 分卷，打开 `.001` 解压，将整个 `D2R Mobile Resources` 文件夹放在固定位置，例如自己的“游戏”文件夹。保留 `data` 内的 `build_manifest.psv` 和 18 个 `.data` 文件。已有的 iOS 资源文件夹符合下方结构时，也可直接复用：
+2. 使用已有匹配的 Data；原社区下载已失效，见 [#36](https://github.com/jiayx/d2r-mobile-build/issues/36)。若持有全部三个 `D2R-Mobile-Resources.zip` 分卷，打开 `.001` 解压，将整个 `D2R Mobile Resources` 文件夹放在固定位置，例如自己的“游戏”文件夹。保留 `data` 内的 `build_manifest.psv` 和 18 个 `.data` 文件。已有的 iOS 资源文件夹符合下方结构时，也可直接复用：
 
    ```text
    D2R Mobile Resources/
@@ -105,7 +107,7 @@ IPA 携带 `com.apple.developer.kernel.increased-memory-limit` 的 ad-hoc 权限
        └── …（其余 17 个 .data 文件）
    ```
 
-   若已有资源目录缺少 `build_manifest.psv`，请重新解压上方链接中的完整资源包。
+   若已有资源目录缺少 `build_manifest.psv`，请重新解压已有的完整匹配资源包；不完整的目录不能直接使用。
 3. 从“应用程序”打开 App。若系统提示无法验证开发者，进入 **系统设置 → 隐私与安全性 → 仍要打开**，再确认“打开”。详见 Apple 的[打开可信应用说明](https://support.apple.com/zh-cn/102445)。
 4. 应用提示选择资源时，选择包含 `data` 的整个 **`D2R Mobile Resources`** 文件夹。应用会记住这个位置，包内已包含预编译 Metal 着色器。
 
