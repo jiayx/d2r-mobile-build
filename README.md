@@ -51,7 +51,9 @@ After the build, download from your repository’s **Releases**:
 | `D2RMobile-<version>-build.<run>.<attempt>-ios18.ipa` | iOS 18–25 |
 | `SHA256SUMS.txt`, `build-report.json` | Checksums and build details |
 
-Download the community-provided [game resources (Data and Legacy)](https://drive.google.com/drive/folders/1lfjUghi54ohyDxYEtNuEjtGUZyGovaIA):
+The former community Google Drive download for Data and Legacy is unavailable; no replacement download has been verified. See [resource availability #36](https://github.com/jiayx/d2r-mobile-build/issues/36). Existing matching Data and Legacy can be reused. Installation requires these resources; the app download does not include them.
+
+Previously shared packages:
 
 | Package | Download size | Purpose |
 |---|---|---|
@@ -59,8 +61,8 @@ Download the community-provided [game resources (Data and Legacy)](https://drive
 | `Legacy-Device-Pack.zip` | 1.02 GB | Additional textures for A14–A16 devices; contains the `Legacy Device Pack` folder |
 
 1. Sign and install the IPA with [Sideloadly](https://sideloadly.io/), [iloader](https://iloader.app/), [AltStore Classic](https://faq.altstore.io/altstore-classic/your-altstore), or [SideStore](https://sidestore.io/), then open the app once.
-2. Download matching Data from the link above. For split archives, download all `.001`, `.002`, and `.003` parts and open `.001` with an extractor supporting split archives. Copy the entire extracted `D2R Mobile Resources` folder to **Files → On My iPhone → D2R Mobile**. Alternatively, connect to a Mac and drag the folder into the app under **Finder → your iPhone → Files**.
-3. A14–A16 devices also need `Legacy-Device-Pack.zip` from the same link. Extract it and import the entire `Legacy Device Pack` folder beside the resource folder. A17 Pro and newer devices and M-series iPads use the standard Data.
+2. Use your existing matching Data. For split archives, you need all `.001`, `.002`, and `.003` parts and open `.001` with an extractor supporting split archives. Copy the entire extracted `D2R Mobile Resources` folder to **Files → On My iPhone → D2R Mobile**. Alternatively, connect to a Mac and drag the folder into the app under **Finder → your iPhone → Files**.
+3. A14–A16 devices also need a matching `Legacy-Device-Pack.zip`. Extract it and import the entire `Legacy Device Pack` folder beside the resource folder. A17 Pro and newer devices and M-series iPads use the standard Data.
 
    Under **Files → On My iPhone → D2R Mobile**, the two folders should be at the same level:
 
@@ -95,7 +97,7 @@ Run **Build macOS** with the macOS JSON configuration above. After the build, do
 | `Mac-SHA256SUMS.txt`, `macos-build-report.json` | Checksums and build details |
 
 1. Extract the ZIP and drag the `.app` into **Applications**.
-2. Download all three `D2R-Mobile-Resources.zip` parts from the [game resource folder](https://drive.google.com/drive/folders/1lfjUghi54ohyDxYEtNuEjtGUZyGovaIA) and open `.001` to extract them. Keep the entire `D2R Mobile Resources` folder in a stable location, such as your Games folder, including `build_manifest.psv` and all 18 `.data` files inside `data`. You can reuse an existing iOS resource folder with this structure:
+2. Use your existing matching Data; the former community download is unavailable (see [#36](https://github.com/jiayx/d2r-mobile-build/issues/36)). If you have all three `D2R-Mobile-Resources.zip` parts, open `.001` to extract them. Keep the entire `D2R Mobile Resources` folder in a stable location, such as your Games folder, including `build_manifest.psv` and all 18 `.data` files inside `data`. You can reuse an existing iOS resource folder with this structure:
 
    ```text
    D2R Mobile Resources/
@@ -105,7 +107,7 @@ Run **Build macOS** with the macOS JSON configuration above. After the build, do
        └── … (the other 17 .data files)
    ```
 
-   If your existing resource folder is missing `build_manifest.psv`, extract the complete resource archive from the link above again.
+   If your existing resource folder is missing `build_manifest.psv`, extract your complete matching resource archive again; an incomplete folder is not ready to use.
 3. Open the app from **Applications**. If macOS blocks it because the developer cannot be verified, open **System Settings → Privacy & Security → Open Anyway**, then confirm **Open**. See Apple’s [instructions for opening an app you trust](https://support.apple.com/102445).
 4. When the app asks for resources, select the entire **`D2R Mobile Resources`** folder containing `data`. The app remembers this location. Metal shaders are included precompiled.
 
