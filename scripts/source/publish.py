@@ -25,15 +25,15 @@ def notes():
         f'- iOS 26 and later: `{standard}`.\n'
         f'- iOS 18–25: `{compatibility}`.\n\n'
         f'Sign and install with {INSTALLER_LINKS}.\n\n'
-        'Download matching Data and, for A14–A16 devices, the Legacy Device Pack '
-        'from your resource provider’s storage. Previously imported matching resources remain reusable. '
+        'Use matching Data and, for A14–A16 devices, the Legacy Device Pack '
+        'from your existing resources. The former community download is unavailable; no replacement link has been verified (see issue #36). Previously imported matching resources remain reusable. '
         'Metal shaders are included precompiled. This build has not been tested on a physical device.\n\n'
         f'For installation and resource import, see the [README]({base}README.md).',
         f'源码：`{ci.CONFIG["upstream_commit"]}`。\n\n'
         f'- iOS 26 及以上：`{standard}`。\n'
         f'- iOS 18–25：`{compatibility}`。\n\n'
         f'使用 {CHINESE_INSTALLER_LINKS} 签名安装。\n\n'
-        '从资源提供者的网盘下载配套 Data；A14–A16 设备另需 Legacy Device Pack。'
+        '使用已有的配套 Data；A14–A16 设备另需 Legacy Device Pack。原社区下载已失效，暂无已验证的补档链接（见 Issue #36）。'
         '已导入的相同资源可以继续复用。包内已包含预编译 Metal 着色器。此构建未进行真机测试。\n\n'
         f'安装和资源导入方式见[中文 README]({base}README.zh-CN.md)。')
     return '[English](#english) | [简体中文](#简体中文)\n\n## English\n\n' + english + '\n\n---\n\n## 简体中文\n\n' + chinese + '\n'
