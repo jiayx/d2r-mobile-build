@@ -1,0 +1,29 @@
+name: Mirror existing resource Releases
+on:
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: Copy missing verified assets and publish resource Releases
+        type: boolean
+        default: false
+permissions:
+  contents: write
+concurrency:
+  group: d2r-resource-migration
+  cancel-in-progress: false
+jobs:
+  mirror:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    env:
+      GH_TOKEN: ${{ github.token }}
+      RESOURCE_SOURCE_TOKEN: ${{ secrets.SOURCE_TOKEN }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Check existing private resource access
+        run: python3 scripts/maintenance/mirror_resources.py
+      - name: Copy missing assets and verify server checksums
+        if: inputs.publish
+        run: python3 scripts/maintenance/mirror_resources.py --publish
