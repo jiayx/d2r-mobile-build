@@ -1,0 +1,130 @@
+name: Refresh prepared Apple shaders
+on:
+  workflow_dispatch:
+    inputs:
+      original_run_id:
+        description: 'Successful recovery run containing tvos-shader-input'
+        type: string
+        required: true
+      source_ref:
+        description: 'Upstream tag; empty selects latest stable release'
+        type: string
+        default: ''
+      ios_prepared_input:
+        description: 'Existing iOS prepared input JSON'
+        type: string
+        required: true
+      macos_prepared_input:
+        description: 'Existing macOS prepared input JSON'
+        type: string
+        required: true
+permissions:
+  contents: write
+  actions: read
+concurrency:
+  group: d2r-refresh-apple-shaders
+  cancel-in-progress: false
+jobs:
+  refresh:
+    runs-on: macos-26
+    timeout-minutes: 180
+    env:
+      GH_TOKEN: ${{ github.token }}
+      SOURCE_REPOSITORY: jhaizhou-ops/d2r-mobile
+      IOS_PREPARED_INPUT: ${{ inputs.ios_prepared_input }}
+      MACOS_PREPARED_INPUT: ${{ inputs.macos_prepared_input }}
+      TOOLS_COMMIT: ${{ github.sha }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Select upstream source
+        id: source
+        env:
+          SOURCE_REF: ${{ inputs.source_ref }}
+        run: python3 scripts/source/resolve.py
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: jhaizhou-ops/d2r-mobile
+          ref: ${{ steps.source.outputs.ref }}
+          fetch-depth: 0
+          path: upstream
+          persist-credentials: false
+      - name: Record source identity
+        run: python3 scripts/source/configure.py
+      - name: Select Apple toolchain
+        id: xcode
+        run: python3 scripts/source/select_xcode.py
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.12'
+      - name: Install preparation dependencies
+        run: python -m pip install -r requirements.txt lz4==4.4.5 capstone==5.0.6
+      - name: Resolve existing prepared input identities
+        id: inputs
+        run: |
+          python - <<'PYCODE'
+          import json, os, sys
+          sys.path.insert(0, 'scripts')
+          from input_config import settings, input_identity
+          for platform in ('IOS', 'MACOS'):
+              variable = platform + '_PREPARED_INPUT'
+              url, digest = settings(variable)
+              with open(os.environ['GITHUB_ENV'], 'a') as output:
+                  output.write(variable + '=' + json.dumps({'url': url, 'sha256': digest}) + '\n')
+              with open(os.environ['GITHUB_OUTPUT'], 'a') as output:
+                  output.write(platform.lower() + '=' + input_identity(url, digest) + '\n')
+          PYCODE
+      - uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .prepared-downloads
+          key: prepared-input-v1-${{ steps.inputs.outputs.ios }}
+      - uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .macos-downloads
+          key: macos-input-v1-${{ steps.inputs.outputs.macos }}
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68
+        with:
+          dotnet-version: '10.0.x'
+      - name: Install shader tools
+        run: |
+          brew list spirv-cross >/dev/null 2>&1 || brew install spirv-cross
+          xcrun --sdk iphoneos metal --version || xcodebuild -downloadComponent MetalToolchain
+      - name: Restore matching shader generation cache
+        id: generation
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
+        with:
+          path: .shader-refresh/build
+          key: apple-shader-refresh-v1-${{ steps.source.outputs.ref }}-${{ steps.xcode.outputs.toolchain }}-${{ hashFiles('scripts/maintenance/refresh_shaders.py') }}
+      - name: Regenerate shaders and publish verified prepared inputs
+        env:
+          DATA_INPUT: '{"recovery_run_id":"${{ inputs.original_run_id }}"}'
+          J: '3'
+          HOMEBREW_NO_AUTO_UPDATE: '1'
+          HOMEBREW_NO_INSTALL_CLEANUP: '1'
+        run: python -u scripts/maintenance/refresh_shaders.py
+      - name: Preserve shader generation cache
+        if: always() && steps.generation.outputs.cache-hit != 'true'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
+        with:
+          path: .shader-refresh/build
+          key: ${{ steps.generation.outputs.cache-primary-key }}
+      - name: Preserve preparation report
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: shader-refresh-report
+          path: outputs/shader-refresh-report.json
+          if-no-files-found: ignore
+      - name: Preserve generated resources if publication fails
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: refreshed-shaders-and-prepared-inputs
+          path: |
+            .shader-refresh
+            .ios-prepared
+            .macos-prepared
+          include-hidden-files: true
+          retention-days: 30
+          if-no-files-found: ignore
