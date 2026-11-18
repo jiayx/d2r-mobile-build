@@ -13,8 +13,8 @@ Build iOS and macOS apps from [d2r-mobile](https://github.com/jhaizhou-ops/d2r-m
 
    ```json
    {
-     "url": "https://ipfs.filebase.io/ipns/k51qzi5uqu5dkbfnqcjbd6jlgbckojtl4gu7m1kgu8esex1zg4oo485o5cjop2/D2RMobile-Prepared.zip",
-     "sha256_url": "https://ipfs.filebase.io/ipns/k51qzi5uqu5dkbfnqcjbd6jlgbckojtl4gu7m1kgu8esex1zg4oo485o5cjop2/Prepared-SHA256SUMS.txt"
+     "url": "https://github.com/jiayx/d2r-mobile-build/releases/download/ios-shader-refresh-v1-2ac64814c30e1227d8f09f75d42f6d4e832b2a9965fd1739d78aef7fdb184e73/D2RMobile-Prepared.zip",
+     "sha256_url": "https://github.com/jiayx/d2r-mobile-build/releases/download/ios-shader-refresh-v1-2ac64814c30e1227d8f09f75d42f6d4e832b2a9965fd1739d78aef7fdb184e73/Prepared-SHA256SUMS.txt"
    }
    ```
 
@@ -22,12 +22,12 @@ Build iOS and macOS apps from [d2r-mobile](https://github.com/jhaizhou-ops/d2r-m
 
    ```json
    {
-     "url": "https://ipfs.filebase.io/ipns/k51qzi5uqu5dkbfnqcjbd6jlgbckojtl4gu7m1kgu8esex1zg4oo485o5cjop2/D2RMobile-MacPrepared.zip",
-     "sha256_url": "https://ipfs.filebase.io/ipns/k51qzi5uqu5dkbfnqcjbd6jlgbckojtl4gu7m1kgu8esex1zg4oo485o5cjop2/MacPrepared-SHA256SUMS.txt"
+     "url": "https://github.com/jiayx/d2r-mobile-build/releases/download/macos-shader-refresh-v1-ba0635da60c32e1a1d7fe8779e6f29ad07b44016260cec038ebd96071ac2d2fd/D2RMobile-MacPrepared.zip",
+     "sha256_url": "https://github.com/jiayx/d2r-mobile-build/releases/download/macos-shader-refresh-v1-ba0635da60c32e1a1d7fe8779e6f29ad07b44016260cec038ebd96071ac2d2fd/MacPrepared-SHA256SUMS.txt"
    }
    ```
 
-   The Filebase IPNS URLs are stable; package updates keep these addresses and refresh their checksum files.
+   Prepared inputs are published as versioned GitHub Releases. Reuse these packages until the build reports that the selected upstream source needs newer inputs.
 
    The prepared packages are approximately **287 MB for iOS** and **292 MB for macOS**.
 
