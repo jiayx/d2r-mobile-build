@@ -120,13 +120,13 @@ jobs:
         id: interface-budget
         if: inputs.publish && steps.interface.outputs.cache-hit != 'true'
         run: python scripts/cache_budget.py .interface-cache interface
-      - name: Cache verified interface resources
+      - name: Cache interface resources
         if: steps.interface-budget.outputs.interface == 'true'
         uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: .interface-cache
           key: ${{ steps.interface-key.outputs.interface_key }}
-      - name: Upload verified macOS packages
+      - name: Upload macOS packages
         if: inputs.publish
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:

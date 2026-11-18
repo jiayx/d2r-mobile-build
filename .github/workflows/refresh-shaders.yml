@@ -96,7 +96,7 @@ jobs:
         with:
           path: .shader-refresh/build
           key: apple-shader-refresh-v1-${{ steps.source.outputs.ref }}-${{ steps.xcode.outputs.toolchain }}-${{ hashFiles('scripts/maintenance/refresh_shaders.py') }}
-      - name: Regenerate shaders and publish verified prepared inputs
+      - name: Regenerate shaders and publish prepared inputs
         env:
           DATA_INPUT: '{"recovery_run_id":"${{ inputs.original_run_id }}"}'
           J: '3'

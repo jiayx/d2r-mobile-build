@@ -336,15 +336,15 @@ def publish():
                     f'Source: `{report["source_commit"]}`.\n\n'
                     '- `macos26.zip`: macOS 26 and later.\n- `macos15.zip`: macOS 15–25.\n\n'
                     'Extract the ZIP and move the app to Applications. On first launch, choose your game’s '
-                    'D2R Mobile Resources folder extracted from the matching resource archive. Data and Legacy downloads are listed in the [resource instructions](https://github.com/jiayx/d2r-mobile-build#download-and-use-on-ios). Metal libraries are precompiled. '
+                    'D2R Mobile Resources folder extracted from the matching resource archive. Metal libraries are precompiled. '
                     'This build has not been tested on a physical device. '
-                    '[Usage](https://github.com/jiayx/d2r-mobile-build/blob/main/README.md#download-and-use-on-macos).\n\n'
+                    '[Downloads and usage](https://github.com/jiayx/d2r-mobile-build/blob/main/README.md#download-and-use-on-macos).\n\n'
                     '## 简体中文\n\n'
                     f'源码：`{report["source_commit"]}`。\n\n'
                     '- `macos26.zip`：macOS 26 及以上。\n- `macos15.zip`：macOS 15–25。\n\n'
-                    '解压 ZIP，将应用移到“应用程序”。解压配套资源包，首次启动选择 D2R Mobile Resources。Data 和 Legacy 下载见[资源说明](https://github.com/jiayx/d2r-mobile-build/blob/main/README.zh-CN.md#ios-下载和使用)。'
+                    '解压 ZIP，将应用移到“应用程序”。解压配套资源包，首次启动选择 D2R Mobile Resources。'
                     'Metal 着色器已预编译，未做真机测试。'
-                    '[使用说明](https://github.com/jiayx/d2r-mobile-build/blob/main/README.zh-CN.md#macos-下载和使用)。\n')
+                    '[下载和使用说明](https://github.com/jiayx/d2r-mobile-build/blob/main/README.zh-CN.md#macos-下载和使用)。\n')
     return publish_assets(repo, report['release_tag'],
                           f"{ci.build_label()} · macOS build {ci.CONFIG['build_number']}", body,
                           [*paths, out / 'Mac-SHA256SUMS.txt', out / 'macos-build-report.json'])

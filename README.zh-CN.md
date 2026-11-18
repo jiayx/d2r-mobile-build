@@ -33,13 +33,11 @@
 
    预处理包大小：iOS 约 **287 MB**，macOS 约 **292 MB**。
 
-3. 点击 **Run workflow** 开始构建。从下载预处理包到编译、打包并发布，iOS 预计约 **6 分钟**，macOS 约 **7 分钟**。
+3. 点击 **Run workflow**，完成后从 **Releases** 下载安装包。
 
 - 默认直接运行，自动编译上游最新正式 Release。
 - 测试开发代码：`source_ref` 填 `main`、其他分支、标签或提交。
 - 测试自己的修改：`source_repository` 填自己的 Fork，`source_ref` 填对应分支。私有源码仓库另配置 **`SOURCE_TOKEN`** Secret，授予该源码仓库 Contents 只读权限。
-
-构建入口自动使用本项目维护的最新构建逻辑。同一上游版本支持多次构建及重跑，每次使用独立的 Release 和文件名。
 
 需要自行准备输入时，见[生成 iOS 预处理包](docs/PREPARED_INPUT.zh-CN.md#生成-ios-预处理包)或 [生成 macOS 预处理包](docs/MACOS_PREPARED_INPUT.zh-CN.md#生成-macos-预处理包)。
 
@@ -53,7 +51,7 @@
 | `D2RMobile-<版本>-build.<运行编号>.<尝试次数>-ios18.ipa` | iOS 18–25 |
 | `SHA256SUMS.txt`、`build-report.json` | 校验值与构建详情 |
 
-从资源 Release 下载 [Data](https://github.com/jiayx/d2r-mobile-build/releases/tag/data-3.3.94012-97a2ada74145114ff8364bdc51a756408ef0c6d332e58fefe68eb0ee2b7c4a31)；A14–A16 设备还需 [Legacy Device Pack](https://github.com/jiayx/d2r-mobile-build/releases/tag/legacy-3.3.94012-3e82ab6dec4dee197c05cfc558f60d794e62394f4d843c908c2b91837fa6f9ce)。请用附件 SHA-256 校验文件。资源只发布一次，应用更新时继续复用，已有匹配的 Data 和 Legacy 无需替换。应用下载不包含这些资源。
+从资源 Release 下载 [Data](https://github.com/jiayx/d2r-mobile-build/releases/tag/data-3.3.94012-97a2ada74145114ff8364bdc51a756408ef0c6d332e58fefe68eb0ee2b7c4a31)；A14–A16 设备还需 [Legacy Device Pack](https://github.com/jiayx/d2r-mobile-build/releases/tag/legacy-3.3.94012-3e82ab6dec4dee197c05cfc558f60d794e62394f4d843c908c2b91837fa6f9ce)。请用附件 SHA-256 校验文件。应用下载不包含这些资源。
 
 资源包：
 
@@ -76,7 +74,7 @@
 
 4. 拷贝完成后回到应用，若停在资源提示页，点击“重试”，应用会自动检测并加载资源。IPA 已包含预编译 Metal 着色器。
 
-IPA 携带 `com.apple.developer.kernel.increased-memory-limit` 的 ad-hoc 权限请求。重签工具需为 App ID 开启该能力，并在最终签名和描述文件中保留它；免费账号也可通过支持该能力的工具使用，具体取决于工具和版本。这不保证固定的内存额度，也不能消除所有闪退。安装前仍需重新签名。
+IPA 携带 `com.apple.developer.kernel.increased-memory-limit` 的 ad-hoc 权限请求。重签工具需为 App ID 开启该能力，并在最终签名和描述文件中保留它；免费账号也可通过支持该能力的工具使用，具体取决于工具和版本。
 
 设备要求：A14 / M1 及更新芯片，至少 6 GB 内存。
 
@@ -123,6 +121,6 @@ IPA 携带 `com.apple.developer.kernel.increased-memory-limit` 的 ad-hoc 权限
 
 ## Apple TV（实验性）
 
-已加入基于上游的 tvOS 构建工作流，[v2.2.0 实验版](https://github.com/jiayx/d2r-mobile-build/releases/tag/v2.2.0-build.7.1-tvos) 已通过原生编译及打包校验。详见[要求、构建和安装说明](docs/TVOS.md)。面向第三代 Apple TV 4K（A15）、tvOS 26+，需要扩展手柄。未进行真机测试；存档位于系统可清理的 Caches。
+下载 [v2.2.0 实验版](https://github.com/jiayx/d2r-mobile-build/releases/tag/v2.2.0-build.7.1-tvos)，或按[构建和安装说明](docs/TVOS.md)自行构建。面向第三代 Apple TV 4K（A15）、tvOS 26+，需要扩展手柄。未进行真机测试；存档位于系统可清理的 Caches。
 
-TV 构建使用一份独立预处理输入（约 226 MB），链接见 TV 说明；不再下载 iOS/Mac 包，也不依赖会过期的着色器 artifact。
+TV 预处理输入约 226 MB，下载链接见 TV 说明。

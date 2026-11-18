@@ -7,7 +7,7 @@ on:
         type: string
         default: ''
       publish:
-        description: Copy missing verified assets and publish resource Releases
+        description: Copy missing assets and publish resource Releases
         type: boolean
         default: false
 permissions:

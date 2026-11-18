@@ -27,11 +27,11 @@ generated/host/
 | `resource-manifest.json` | Names and sizes of the 18 Data files for this game resource version, shared by iOS and macOS. |
 | `romfs-inputs.zip` | Selected original layouts, strings, images, fonts, tables and CASC metadata needed by upstream resource generators. |
 | `legacy/` | Existing Legacy texture-pack descriptor and index. |
-| `generated/host/` | Game-table headers, reused when their generator scripts are unchanged. |
+| `generated/host/` | Game-table headers. |
 
-Interface assets, layouts, strings and overlays follow the selected source. Matching generated outputs are cached and reused across native-code changes. Game-table headers are reused when their generator scripts are unchanged; modified generators rebuild their tables. Game programs and Metal libraries are reused while their generation rules remain compatible. If those heavy generation rules change, generate a new prepared package.
+Interface resources are generated from the selected source. If the workflow reports incompatible prepared inputs, generate a new package.
 
-The workflow downloads this package and compiles the selected source into two IPAs. Download Data and the Legacy Device Pack separately from your resource provider, then follow the [installation instructions](../README.md#download-and-use-on-ios).
+The workflow downloads this package and compiles the selected source into two IPAs. For Data and Legacy downloads and import steps, see the [installation instructions](../README.md#download-and-use-on-ios).
 
 ## Generate an iOS prepared package
 
@@ -72,6 +72,4 @@ jobs:
       SOURCE_TOKEN: ${{ secrets.SOURCE_TOKEN }}
 ```
 
-The workflow defaults to the latest official upstream Release. It prepares rewritten game programs, precompiled iOS Metal libraries and the small original inputs needed to generate interface resources. The existing Legacy index is included for older-device overlays.
-
-The original game archive and completed preparation outputs are cached by their inputs and generation dependencies. The workflow publishes `D2RMobile-Prepared.zip` and `Prepared-SHA256SUMS.txt` to your private Releases. Set the ZIP’s URL and checksum in your `prepared_input` JSON, then use **Build IPA** for ordinary builds.
+The workflow defaults to the latest official upstream Release and publishes `D2RMobile-Prepared.zip` and `Prepared-SHA256SUMS.txt` to your private Releases. Set the ZIP’s URL and checksum in your `prepared_input` JSON, then use **Build IPA** for ordinary builds.

@@ -26,16 +26,16 @@ def notes():
         f'- iOS 18–25: `{compatibility}`.\n\n'
         f'Sign and install with {INSTALLER_LINKS}.\n\n'
         'Use matching Data and, for A14–A16 devices, the Legacy Device Pack '
-        'for this game version. Data and Legacy downloads are listed in the [resource instructions](https://github.com/jiayx/d2r-mobile-build#download-and-use-on-ios). Previously imported matching resources remain reusable. '
+        'for this game version. Imported matching resources can be reused. '
         'Metal shaders are included precompiled. This build has not been tested on a physical device.\n\n'
-        f'For installation and resource import, see the [README]({base}README.md).',
+        f'For downloads and installation, see the [README]({base}README.md).',
         f'源码：`{ci.CONFIG["upstream_commit"]}`。\n\n'
         f'- iOS 26 及以上：`{standard}`。\n'
         f'- iOS 18–25：`{compatibility}`。\n\n'
         f'使用 {CHINESE_INSTALLER_LINKS} 签名安装。\n\n'
-        '使用配套 Data；A14–A16 设备另需 Legacy Device Pack。Data 和 Legacy 下载见[资源说明](https://github.com/jiayx/d2r-mobile-build/blob/main/README.zh-CN.md#ios-下载和使用)。'
+        '使用配套 Data；A14–A16 设备另需 Legacy Device Pack。'
         '已导入的相同资源可以继续复用。包内已包含预编译 Metal 着色器。此构建未进行真机测试。\n\n'
-        f'安装和资源导入方式见[中文 README]({base}README.zh-CN.md)。')
+        f'下载和安装方式见[中文 README]({base}README.zh-CN.md)。')
     return '[English](#english) | [简体中文](#简体中文)\n\n## English\n\n' + english + '\n\n---\n\n## 简体中文\n\n' + chinese + '\n'
 
 

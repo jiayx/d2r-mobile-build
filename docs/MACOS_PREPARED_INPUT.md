@@ -23,10 +23,10 @@ c1_full.tsv
 | `product/` | Upstream’s rewritten `touch` game programs and loader tables |
 | `msl/` | macOS Metal libraries targeting macOS 15.0; each `_b.metallib` has a matching `_b.json` reflection file. Shared by both Mac apps |
 | `romfs-inputs.zip` | Selected original inputs for generating Mac layouts, strings, images, fonts, data tables and overlays |
-| `generated/` | Game-table headers, reused when their generator scripts are unchanged |
+| `generated/` | Game-table headers |
 | `shader-chain.lock`, `c1_full.tsv` | Matching shader tool fingerprints and index metadata |
 
-Mac interface resources follow the selected upstream source, including keyboard glyphs. Matching generated outputs are cached and reused across native-code changes. Game-table headers are reused when their generator scripts are unchanged; modified generators rebuild their tables. Game programs and Metal libraries are reused while their generation rules remain compatible.
+Interface resources are generated from the selected source. If the workflow reports incompatible prepared inputs, generate a new package.
 
 ## Generate a macOS prepared package
 
@@ -45,4 +45,4 @@ jobs:
       GAME_ARCHIVE: ${{ secrets.GAME_ARCHIVE }}
 ```
 
-The workflow restores the original archive cache when available, prepares Mac programs, shaders and small original inputs for interface generation, and publishes `D2RMobile-MacPrepared.zip` and `MacPrepared-SHA256SUMS.txt` to your private Releases. Use this ZIP as the input to **Build macOS**. An asset URL in the same private repository can use `https://api.github.com/repos/OWNER/REPO/releases/assets/ASSET_ID`; downloads authenticate with that repository’s workflow token.
+The workflow publishes `D2RMobile-MacPrepared.zip` and `MacPrepared-SHA256SUMS.txt` to your private Releases. Use this ZIP as the input to **Build macOS**. An asset URL in the same private repository can use `https://api.github.com/repos/OWNER/REPO/releases/assets/ASSET_ID`; downloads authenticate with that repository’s workflow token.

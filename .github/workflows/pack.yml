@@ -121,13 +121,13 @@ jobs:
         id: interface-budget
         if: steps.interface.outputs.cache-hit != 'true'
         run: python scripts/cache_budget.py .interface-cache interface
-      - name: Cache verified interface resources
+      - name: Cache interface resources
         if: steps.interface-budget.outputs.interface == 'true'
         uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: .interface-cache
           key: ${{ steps.interface-key.outputs.interface_key }}
-      - name: Upload verified native build inputs
+      - name: Upload native build inputs
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: native-source-inputs
@@ -197,7 +197,7 @@ jobs:
         with:
           path: .native-module-cache
           key: ${{ steps.modules.outputs.cache-primary-key }}
-      - name: Upload the verified IPA
+      - name: Upload the IPA
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: IPA-ios${{ matrix.minimum }}

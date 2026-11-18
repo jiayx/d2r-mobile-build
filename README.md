@@ -33,13 +33,11 @@ Build iOS and macOS apps from [d2r-mobile](https://github.com/jhaizhou-ops/d2r-m
 
    The prepared packages are approximately **287 MB for iOS** and **292 MB for macOS**.
 
-3. Click **Run workflow** to start the build. Downloading, compiling, packaging and publishing typically takes **about 6 minutes for iOS** or **7 minutes for macOS**.
+3. Click **Run workflow**. Download the completed packages from **Releases**.
 
 - Run with the defaults to compile the latest official upstream Release.
 - To test development code, set `source_ref` to `main`, another branch, a tag, or a commit.
 - To test your changes, set `source_repository` to your fork and `source_ref` to its branch. For private source repositories, add a **`SOURCE_TOKEN`** Secret with Contents read access to that repository.
-
-The build entry automatically uses this project's latest build logic. Repeated builds and reruns of the same upstream version each receive independent Release and file names.
 
 To prepare your own inputs, see [Generate an iOS prepared package](docs/PREPARED_INPUT.md#generate-an-ios-prepared-package) or [Generate a macOS prepared package](docs/MACOS_PREPARED_INPUT.md#generate-a-macos-prepared-package).
 
@@ -53,7 +51,7 @@ After the build, download from your repository’s **Releases**:
 | `D2RMobile-<version>-build.<run>.<attempt>-ios18.ipa` | iOS 18–25 |
 | `SHA256SUMS.txt`, `build-report.json` | Checksums and build details |
 
-Download [Data](https://github.com/jiayx/d2r-mobile-build/releases/tag/data-3.3.94012-97a2ada74145114ff8364bdc51a756408ef0c6d332e58fefe68eb0ee2b7c4a31) and, for A14–A16 devices, the [Legacy Device Pack](https://github.com/jiayx/d2r-mobile-build/releases/tag/legacy-3.3.94012-3e82ab6dec4dee197c05cfc558f60d794e62394f4d843c908c2b91837fa6f9ce) from the resource Releases. Verify the attached SHA-256 checksums. These resources are published once and reused across app updates; existing matching Data and Legacy need no replacement. The app download does not include them.
+Download [Data](https://github.com/jiayx/d2r-mobile-build/releases/tag/data-3.3.94012-97a2ada74145114ff8364bdc51a756408ef0c6d332e58fefe68eb0ee2b7c4a31) and, for A14–A16 devices, the [Legacy Device Pack](https://github.com/jiayx/d2r-mobile-build/releases/tag/legacy-3.3.94012-3e82ab6dec4dee197c05cfc558f60d794e62394f4d843c908c2b91837fa6f9ce) from the resource Releases. Verify the attached SHA-256 checksums. The app download does not include them.
 
 Resource packages:
 
@@ -76,7 +74,7 @@ Resource packages:
 
 4. Return to the app after copying. If the resource prompt is still shown, tap **Retry**; the app automatically detects and loads the resources. The IPA includes precompiled Metal shaders.
 
-The IPA carries an ad-hoc request for `com.apple.developer.kernel.increased-memory-limit`. Your signing tool must enable the capability for the App ID and preserve it in the final signature and provisioning profile. Free accounts can support this with compatible signing tools; support varies by tool/version. This does not guarantee a fixed memory allowance or eliminate every crash. The IPA still requires signing before installation.
+The IPA carries an ad-hoc request for `com.apple.developer.kernel.increased-memory-limit`. Your signing tool must enable the capability for the App ID and preserve it in the final signature and provisioning profile. Free accounts can support this with compatible signing tools; support varies by tool/version.
 
 Device requirements: A14 / M1 or newer, with at least 6 GB of memory.
 
@@ -123,6 +121,6 @@ Reuse your existing Mac prepared input configuration when updating. If the workf
 
 ## Apple TV (experimental)
 
-An upstream-based tvOS build workflow is available. The [experimental v2.2.0 package](https://github.com/jiayx/d2r-mobile-build/releases/tag/v2.2.0-build.7.1-tvos) has passed native compilation and package checks. See [requirements, build and installation](docs/TVOS.md). It targets Apple TV 4K (3rd generation, A15), tvOS 26+, and an extended gamepad. No physical-device testing; saves are stored in purgeable Caches.
+Download the [experimental v2.2.0 package](https://github.com/jiayx/d2r-mobile-build/releases/tag/v2.2.0-build.7.1-tvos) or see [build and installation instructions](docs/TVOS.md). It targets Apple TV 4K (3rd generation, A15), tvOS 26+, and an extended gamepad. No physical-device testing; saves are stored in purgeable Caches.
 
-TV builds use one standalone prepared input (about 226 MB), linked in the TV guide; they no longer download the iOS/Mac packages or rely on an expiring shader artifact.
+The TV prepared input (about 226 MB) is linked in the TV guide.

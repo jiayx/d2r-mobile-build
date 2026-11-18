@@ -130,7 +130,7 @@ def publish():
     repo = os.environ['GITHUB_REPOSITORY']
     if release_info(repo, tag) is None:
         gh('release', 'create', tag, '--repo', repo, '--target', os.environ['GITHUB_SHA'],
-           '--title', 'TV prepared build input', '--notes', 'Verified TV build input; not an installable app.',
+           '--title', 'TV prepared build input', '--notes', 'Prepared input for Build Apple TV. / Build Apple TV 使用的预处理包。',
            '--draft', '--prerelease')
     for attempt in range(6):
         if release_info(repo, tag) is not None:

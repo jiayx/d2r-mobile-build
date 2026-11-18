@@ -99,7 +99,7 @@ jobs:
         with:
           path: .macos-downloads
           key: macos-input-v1-${{ steps.inputs.outputs.macos }}
-      - name: Regenerate programs and publish verified prepared inputs
+      - name: Regenerate programs and publish prepared inputs
         run: python scripts/maintenance/refresh_programs.py
       - name: Preserve program generation report
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
