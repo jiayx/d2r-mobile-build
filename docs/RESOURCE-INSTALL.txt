@@ -1,0 +1,23 @@
+Data / Legacy installation · 资源安装
+
+English
+Download all three Data volumes into one directory. Verify Resources-Parts-SHA256SUMS.txt, then open .001 with a split-archive capable extractor, or concatenate the parts and verify Resources-SHA256SUMS.txt before extracting the combined ZIP.
+iOS: import the entire D2R Mobile Resources folder into Files > On My iPhone > D2R Mobile. A14–A16 devices also need the extracted Legacy Device Pack folder beside it. Tap Retry after import. Metal shaders are already precompiled.
+macOS: keep the entire D2R Mobile Resources folder in a stable location and choose it when the app asks. Keep build_manifest.psv and all 18 .data files inside data.
+Matching resources can be reused across app updates. The IPA needs signing before installation. These packages have not been tested on physical devices.
+Usage and app downloads: https://github.com/jiayx/d2r-mobile-build
+
+简体中文
+将 Data 的三个分卷下载到同一目录。先校验 Resources-Parts-SHA256SUMS.txt，再使用支持分卷的解压工具打开 .001；也可合并分卷，按 Resources-SHA256SUMS.txt 校验后解压完整 ZIP。
+iOS：将整个 D2R Mobile Resources 文件夹导入“文件 > 我的 iPhone > D2R Mobile”。A14–A16 设备还需将解压后的 Legacy Device Pack 文件夹并排放入。导入后点击重试，Metal 着色器已预编译。
+macOS：将整个 D2R Mobile Resources 文件夹放在固定位置，按应用提示选择。保留 data 内的 build_manifest.psv 和全部 18 个 .data 文件。
+应用更新可继续复用匹配资源。IPA 安装前仍需签名。未做真机测试。
+使用说明与应用下载：https://github.com/jiayx/d2r-mobile-build
+
+Mac / Linux checksum and concatenation:
+shasum -a 256 -c Resources-Parts-SHA256SUMS.txt
+cat D2R-Mobile-Resources.zip.001 D2R-Mobile-Resources.zip.002 D2R-Mobile-Resources.zip.003 > D2R-Mobile-Resources.zip
+shasum -a 256 -c Resources-SHA256SUMS.txt
+
+Windows concatenation (Command Prompt):
+copy /b D2R-Mobile-Resources.zip.001+D2R-Mobile-Resources.zip.002+D2R-Mobile-Resources.zip.003 D2R-Mobile-Resources.zip

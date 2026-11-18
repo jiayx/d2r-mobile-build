@@ -6,6 +6,7 @@ from pathlib import Path
 import subprocess
 import sys
 import urllib.request
+import urllib.error
 from urllib.parse import urlparse
 
 SOURCE = 'jiayx/d2r-mobile-build-test'
@@ -66,6 +67,10 @@ def main():
         if destination(tag) is None:
             raise ValueError('Prepare reviewed destination release notes first: ' + tag)
         for asset in release['assets']:
+            path = (Path('docs/RESOURCE-INSTALL.txt') if asset['name'] == 'RESOURCE-INSTALL.txt'
+                    else root / asset['name'])
+            if asset['name'] == 'RESOURCE-INSTALL.txt':
+                asset = dict(asset, size=path.stat().st_size, digest=digest(path))
             found = next((a for a in destination(tag)['assets'] if a['name'] == asset['name']), None)
             identity = (asset['size'], asset['digest'])
             if found:
@@ -73,13 +78,14 @@ def main():
                     raise ValueError('Existing asset differs: ' + asset['name'])
                 print('Already verified:', asset['name'], flush=True)
                 continue
-            path = root / asset['name']
             if not path.exists():
                 if manifest:
                     try:
                         with urllib.request.urlopen(asset['download_url'], timeout=120) as response, path.open('wb') as output:
                             while chunk := response.read(8 * 1024**2):
                                 output.write(chunk)
+                    except urllib.error.HTTPError as exc:
+                        raise RuntimeError('Resource transfer HTTP ' + str(exc.code) + '; source URL omitted') from None
                     except Exception:
                         raise RuntimeError('Resource transfer failed; source URL omitted') from None
                 else:
