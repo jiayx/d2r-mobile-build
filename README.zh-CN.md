@@ -51,9 +51,9 @@
 | `D2RMobile-<版本>-build.<运行编号>.<尝试次数>-ios18.ipa` | iOS 18–25 |
 | `SHA256SUMS.txt`、`build-report.json` | 校验值与构建详情 |
 
-原社区 Google Drive 的 Data 和 Legacy 下载已失效，目前没有确认可用的替代下载，补档情况见 [#36](https://github.com/jiayx/d2r-mobile-build/issues/36)。已有匹配的 Data 和 Legacy 可以继续复用；安装运行需要这些资源，应用下载不包含它们。
+从资源 Release 下载 [Data](https://github.com/jiayx/d2r-mobile-build/releases/tag/data-3.3.94012-97a2ada74145114ff8364bdc51a756408ef0c6d332e58fefe68eb0ee2b7c4a31)；A14–A16 设备还需 [Legacy Device Pack](https://github.com/jiayx/d2r-mobile-build/releases/tag/legacy-3.3.94012-3e82ab6dec4dee197c05cfc558f60d794e62394f4d843c908c2b91837fa6f9ce)。请用附件 SHA-256 校验文件。资源只发布一次，应用更新时继续复用，已有匹配的 Data 和 Legacy 无需替换。应用下载不包含这些资源。
 
-此前分享的资源包：
+资源包：
 
 | 压缩包 | 下载大小 | 用途 |
 |---|---|---|
@@ -61,7 +61,7 @@
 | `Legacy-Device-Pack.zip` | 1.02 GB | A14–A16 设备需要的补充贴图，解压后为 `Legacy Device Pack` 文件夹 |
 
 1. 使用 [Sideloadly](https://sideloadly.io/)、[iloader](https://iloader.app/)、[AltStore Classic](https://faq.altstore.io/altstore-classic/your-altstore) 或 [SideStore](https://sidestore.io/) 签名安装 IPA，安装后先打开一次应用。
-2. 使用已有的配套 Data。分卷形式需备齐全部 `.001`、`.002`、`.003`，用支持分卷的解压工具打开 `.001`，将解压得到的整个 `D2R Mobile Resources` 文件夹拷到“文件”App →“我的 iPhone”→“D2R Mobile”；也可连接 Mac，在 Finder → 手机 →“文件”中拖入该应用。
+2. 从上方资源 Release 下载 Data，或复用已有的配套 Data。分卷形式需备齐全部 `.001`、`.002`、`.003`，用支持分卷的解压工具打开 `.001`，将解压得到的整个 `D2R Mobile Resources` 文件夹拷到“文件”App →“我的 iPhone”→“D2R Mobile”；也可连接 Mac，在 Finder → 手机 →“文件”中拖入该应用。
 3. A14–A16 设备另需匹配的 `Legacy-Device-Pack.zip`，解压后将整个 `Legacy Device Pack` 文件夹与资源文件夹并排导入。A17 Pro 及更新芯片、M 系列 iPad 使用标准 Data。
 
    在“文件”App →“我的 iPhone”→“D2R Mobile”中，两个文件夹应处于同一级：
@@ -97,7 +97,7 @@ IPA 携带 `com.apple.developer.kernel.increased-memory-limit` 的 ad-hoc 权限
 | `Mac-SHA256SUMS.txt`、`macos-build-report.json` | 校验值与构建详情 |
 
 1. 解压 ZIP，将 `.app` 拖入“应用程序”。
-2. 使用已有匹配的 Data；原社区下载已失效，见 [#36](https://github.com/jiayx/d2r-mobile-build/issues/36)。若持有全部三个 `D2R-Mobile-Resources.zip` 分卷，打开 `.001` 解压，将整个 `D2R Mobile Resources` 文件夹放在固定位置，例如自己的“游戏”文件夹。保留 `data` 内的 `build_manifest.psv` 和 18 个 `.data` 文件。已有的 iOS 资源文件夹符合下方结构时，也可直接复用：
+2. 下载 [Data](https://github.com/jiayx/d2r-mobile-build/releases/tag/data-3.3.94012-97a2ada74145114ff8364bdc51a756408ef0c6d332e58fefe68eb0ee2b7c4a31)，或复用已有匹配的资源。若持有全部三个 `D2R-Mobile-Resources.zip` 分卷，打开 `.001` 解压，将整个 `D2R Mobile Resources` 文件夹放在固定位置，例如自己的“游戏”文件夹。保留 `data` 内的 `build_manifest.psv` 和 18 个 `.data` 文件。已有的 iOS 资源文件夹符合下方结构时，也可直接复用：
 
    ```text
    D2R Mobile Resources/

@@ -51,9 +51,9 @@ After the build, download from your repository’s **Releases**:
 | `D2RMobile-<version>-build.<run>.<attempt>-ios18.ipa` | iOS 18–25 |
 | `SHA256SUMS.txt`, `build-report.json` | Checksums and build details |
 
-The former community Google Drive download for Data and Legacy is unavailable; no replacement download has been verified. See [resource availability #36](https://github.com/jiayx/d2r-mobile-build/issues/36). Existing matching Data and Legacy can be reused. Installation requires these resources; the app download does not include them.
+Download [Data](https://github.com/jiayx/d2r-mobile-build/releases/tag/data-3.3.94012-97a2ada74145114ff8364bdc51a756408ef0c6d332e58fefe68eb0ee2b7c4a31) and, for A14–A16 devices, the [Legacy Device Pack](https://github.com/jiayx/d2r-mobile-build/releases/tag/legacy-3.3.94012-3e82ab6dec4dee197c05cfc558f60d794e62394f4d843c908c2b91837fa6f9ce) from the resource Releases. Verify the attached SHA-256 checksums. These resources are published once and reused across app updates; existing matching Data and Legacy need no replacement. The app download does not include them.
 
-Previously shared packages:
+Resource packages:
 
 | Package | Download size | Purpose |
 |---|---|---|
@@ -61,7 +61,7 @@ Previously shared packages:
 | `Legacy-Device-Pack.zip` | 1.02 GB | Additional textures for A14–A16 devices; contains the `Legacy Device Pack` folder |
 
 1. Sign and install the IPA with [Sideloadly](https://sideloadly.io/), [iloader](https://iloader.app/), [AltStore Classic](https://faq.altstore.io/altstore-classic/your-altstore), or [SideStore](https://sidestore.io/), then open the app once.
-2. Use your existing matching Data. For split archives, you need all `.001`, `.002`, and `.003` parts and open `.001` with an extractor supporting split archives. Copy the entire extracted `D2R Mobile Resources` folder to **Files → On My iPhone → D2R Mobile**. Alternatively, connect to a Mac and drag the folder into the app under **Finder → your iPhone → Files**.
+2. Download Data from the resource Release above or reuse your existing matching Data. For split archives, you need all `.001`, `.002`, and `.003` parts and open `.001` with an extractor supporting split archives. Copy the entire extracted `D2R Mobile Resources` folder to **Files → On My iPhone → D2R Mobile**. Alternatively, connect to a Mac and drag the folder into the app under **Finder → your iPhone → Files**.
 3. A14–A16 devices also need a matching `Legacy-Device-Pack.zip`. Extract it and import the entire `Legacy Device Pack` folder beside the resource folder. A17 Pro and newer devices and M-series iPads use the standard Data.
 
    Under **Files → On My iPhone → D2R Mobile**, the two folders should be at the same level:
@@ -97,7 +97,7 @@ Run **Build macOS** with the macOS JSON configuration above. After the build, do
 | `Mac-SHA256SUMS.txt`, `macos-build-report.json` | Checksums and build details |
 
 1. Extract the ZIP and drag the `.app` into **Applications**.
-2. Use your existing matching Data; the former community download is unavailable (see [#36](https://github.com/jiayx/d2r-mobile-build/issues/36)). If you have all three `D2R-Mobile-Resources.zip` parts, open `.001` to extract them. Keep the entire `D2R Mobile Resources` folder in a stable location, such as your Games folder, including `build_manifest.psv` and all 18 `.data` files inside `data`. You can reuse an existing iOS resource folder with this structure:
+2. Download [Data](https://github.com/jiayx/d2r-mobile-build/releases/tag/data-3.3.94012-97a2ada74145114ff8364bdc51a756408ef0c6d332e58fefe68eb0ee2b7c4a31) or reuse your existing matching resources. If you have all three `D2R-Mobile-Resources.zip` parts, open `.001` to extract them. Keep the entire `D2R Mobile Resources` folder in a stable location, such as your Games folder, including `build_manifest.psv` and all 18 `.data` files inside `data`. You can reuse an existing iOS resource folder with this structure:
 
    ```text
    D2R Mobile Resources/
