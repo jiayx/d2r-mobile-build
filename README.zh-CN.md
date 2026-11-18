@@ -2,6 +2,8 @@
 
 [English](README.md) | [简体中文](README.zh-CN.md)
 
+**游戏资源下载：**[Data（三个分卷全部下载）](https://github.com/jiayx/d2r-mobile-build/releases/tag/data-3.3.94012-97a2ada74145114ff8364bdc51a756408ef0c6d332e58fefe68eb0ee2b7c4a31) · [Legacy Device Pack（A14–A16）](https://github.com/jiayx/d2r-mobile-build/releases/tag/legacy-3.3.94012-3e82ab6dec4dee197c05cfc558f60d794e62394f4d843c908c2b91837fa6f9ce)
+
 在 GitHub Actions 中从 [d2r-mobile](https://github.com/jhaizhou-ops/d2r-mobile) 源码构建 iOS 和 macOS 应用。默认选择上游最新正式 Release，发布到自己的私有仓库。
 
 ## 配置和构建
