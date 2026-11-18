@@ -1,8 +1,8 @@
 # Apple TV (experimental) / Apple TV（实验性）
 
-Requires **Apple TV 4K (3rd generation, A15), tvOS 26+**, and an Xbox / PlayStation / compatible gamepad. Siri Remote is not supported. Download the [Apple TV package](https://github.com/jiayx/d2r-mobile-build/releases?q=-tvos). No physical-device testing.
+Requires **Apple TV 4K (3rd generation, A15), tvOS 26+**, and an Xbox / PlayStation / compatible gamepad. Siri Remote is not supported. Download the [Apple TV package](https://github.com/jiayx/d2r-mobile-build/releases/tag/v2.3.3-build.1.2-tvos). No physical-device testing.
 
-需要 **第三代 Apple TV 4K（A15）、tvOS 26+** 和 Xbox / PlayStation 等兼容手柄，不支持 Siri 遥控器。下载 [Apple TV 安装包](https://github.com/jiayx/d2r-mobile-build/releases?q=-tvos)。未做真机测试。
+需要 **第三代 Apple TV 4K（A15）、tvOS 26+** 和 Xbox / PlayStation 等兼容手柄，不支持 Siri 遥控器。下载 [Apple TV 安装包](https://github.com/jiayx/d2r-mobile-build/releases/tag/v2.3.3-build.1.2-tvos)。未做真机测试。
 
 ## Build / 构建
 
@@ -45,6 +45,25 @@ Download Data and Legacy from the [resource links](../README.md), then copy thes
 Match the Legacy file's size and SHA-256 to the build report. Import Data, Legacy and the TV overlay.
 
 Legacy 文件的大小及 SHA-256 应与构建报告一致。Data、Legacy 和 TV 覆盖层均需导入。
+
+With Xcode, you can transfer the three directories separately. Install the signed app, open it once, then quit it. On the Mac, place the extracted directories in the layout above under a local `D2R/` folder. Run this from its parent directory using the paired Apple TV identifier and the bundle ID used when signing.
+
+可以用 Xcode 分三次传输。先安装已签名的 App，打开一次并退出。在 Mac 上按上表整理本地 `D2R/` 文件夹，在它的上一级目录执行以下命令。设备标识填写已配对的 Apple TV，包名填写重签后的实际值。
+
+```bash
+xcrun devicectl list devices
+DEVICE='your-device-identifier'
+BUNDLE='your-signed-bundle-id'
+for dir in RomFS astc romfs_overlay_astc; do
+  xcrun devicectl device copy to --device "$DEVICE" \
+    --domain-type appDataContainer --domain-identifier "$BUNDLE" \
+    --source "D2R/$dir" --destination "Library/Caches/D2R/$dir" || break
+done
+```
+
+After all three transfers succeed, launch the app again. If one fails, retry that directory. The commands only target the resource directories.
+
+三次传输均成功后重新启动 App。若某一步失败，可单独重传对应目录。这些命令只写入资源目录。
 
 **tvOS may purge Caches, including saves. Back up saves; cloud saving is not supported.**
 

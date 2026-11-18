@@ -11,7 +11,7 @@ import zipfile
 import ci
 import tvos_inputs
 import tvos_prepared
-from source.publish import gh, release_info, upload_verified
+from source.publish import publish_assets, release_info
 
 
 def configure_project(path, config):
@@ -140,12 +140,9 @@ def publish():
     repo, tag = os.environ['GITHUB_REPOSITORY'], report['release_tag']
     source_release = release_info(os.environ['SOURCE_REPOSITORY'], ci.build_label())
     preview = not source_release or source_release['draft'] or source_release['prerelease']
-    if release_info(repo, tag) is None:
-        gh('release', 'create', tag, '--repo', repo, '--target', os.environ['GITHUB_SHA'],
-           '--title', ci.build_label() + ' · Apple TV build ' + ci.CONFIG['build_number'],
-           '--notes-file', body, '--draft')
-    upload_verified(repo, tag, [*paths, out / 'TV-SHA256SUMS.txt', out / 'tvos-build-report.json'])
-    gh('release', 'edit', tag, '--repo', repo, '--draft=false', '--prerelease=' + str(bool(preview)).lower(), '--latest=false')
+    return publish_assets(repo, tag, ci.build_label() + ' · Apple TV build ' + ci.CONFIG['build_number'],
+                          body, [*paths, out / 'TV-SHA256SUMS.txt', out / 'tvos-build-report.json'],
+                          latest=False, prerelease=bool(preview))
 
 
 if __name__ == '__main__':

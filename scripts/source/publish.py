@@ -104,7 +104,7 @@ def collect_packages(out):
     return paths
 
 
-def publish_assets(repo, tag, title, body, paths):
+def publish_assets(repo, tag, title, body, paths, *, latest=True, prerelease=False):
     release = release_info(repo, tag)
     if release is None:
         gh('release', 'create', tag, '--repo', repo, '--target', os.environ['GITHUB_SHA'],
@@ -120,7 +120,7 @@ def publish_assets(repo, tag, title, body, paths):
         raise ValueError('Cannot update an immutable Release')
     upload_verified(repo, tag, paths)
     gh('release', 'edit', tag, '--repo', repo, '--notes-file', body, '--title', title,
-       '--draft=false', '--latest=true')
+       '--draft=false', '--latest=' + str(latest).lower(), '--prerelease=' + str(prerelease).lower())
     release = release_info(repo, tag)
     if not release or release['draft']:
         raise RuntimeError('Release did not become published')
