@@ -115,6 +115,20 @@ jobs:
         with:
           path: .tvos-work/build
           key: tvos-generation-v1-${{ hashFiles('scripts/tvos*.py') }}-${{ steps.identity.outputs.source_commit }}-${{ steps.xcode.outputs.toolchain }}-${{ steps.game.outputs.input_revision }}
+      - name: Restore shared shader translation cache
+        if: steps.generation.outputs.cache-hit != 'true'
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
+        with:
+          path: .shader-refresh/build
+          key: apple-shader-refresh-v1-${{ steps.source.outputs.ref }}-${{ steps.xcode.outputs.toolchain }}-${{ hashFiles('scripts/maintenance/refresh_shaders.py') }}
+      - name: Reuse content-addressed shader translations
+        if: steps.generation.outputs.cache-hit != 'true'
+        run: |
+          cas=.shader-refresh/build/cache/metal_shader_cache/cas
+          if [ -d "$cas" ]; then
+            mkdir -p .tvos-work/build/cache/metal_shader_cache
+            mv "$cas" .tvos-work/build/cache/metal_shader_cache/
+          fi
       - name: Build upstream DmTV and TV Legacy overlay
         run: |
           set -o pipefail
@@ -142,7 +156,7 @@ jobs:
           if-no-files-found: error
           compression-level: 0
           retention-days: 3
-      - name: Publish experimental pre-release
+      - name: Publish Apple TV release
         if: inputs.publish
         run: python scripts/tvos.py publish
       - name: Upload failure log

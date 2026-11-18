@@ -1,8 +1,8 @@
 # Apple TV (experimental) / Apple TV（实验性）
 
-Requires **Apple TV 4K (3rd generation, A15), tvOS 26+**, and an Xbox / PlayStation / compatible gamepad. Siri Remote is not supported. Download the [experimental v2.2.0 package](https://github.com/jiayx/d2r-mobile-build/releases/tag/v2.2.0-build.7.1-tvos). No physical-device testing.
+Requires **Apple TV 4K (3rd generation, A15), tvOS 26+**, and an Xbox / PlayStation / compatible gamepad. Siri Remote is not supported. Download the [Apple TV package](https://github.com/jiayx/d2r-mobile-build/releases?q=-tvos). No physical-device testing.
 
-需要 **第三代 Apple TV 4K（A15）、tvOS 26+** 和 Xbox / PlayStation 等兼容手柄，不支持 Siri 遥控器。下载 [v2.2.0 实验版](https://github.com/jiayx/d2r-mobile-build/releases/tag/v2.2.0-build.7.1-tvos)。未做真机测试。
+需要 **第三代 Apple TV 4K（A15）、tvOS 26+** 和 Xbox / PlayStation 等兼容手柄，不支持 Siri 遥控器。下载 [Apple TV 安装包](https://github.com/jiayx/d2r-mobile-build/releases?q=-tvos)。未做真机测试。
 
 ## Build / 构建
 
@@ -12,14 +12,14 @@ Run **Build Apple TV (experimental)** with the following `prepared_input`. Leave
 
 ```json
 {
-  "url": "https://github.com/jiayx/d2r-mobile-build/releases/download/tvos-prepared-v1-ef88cf20fa3fec561f5caf26dad069b106e48386e2dcc3e786e43d7003891c48/D2RMobile-TVPrepared.zip",
-  "sha256_url": "https://github.com/jiayx/d2r-mobile-build/releases/download/tvos-prepared-v1-ef88cf20fa3fec561f5caf26dad069b106e48386e2dcc3e786e43d7003891c48/TVPrepared-SHA256SUMS.txt"
+  "url": "https://github.com/jiayx/d2r-mobile-build/releases/download/tvos-prepared-v1-fe1fc6715bc34ce20ef9475811faf016362a459705758e9e486d454e70fb5dca/D2RMobile-TVPrepared.zip",
+  "sha256_url": "https://github.com/jiayx/d2r-mobile-build/releases/download/tvos-prepared-v1-fe1fc6715bc34ce20ef9475811faf016362a459705758e9e486d454e70fb5dca/TVPrepared-SHA256SUMS.txt"
 }
 ```
 
-The build publishes an experimental prerelease containing an unsigned IPA, TV overlay, checksums and a build report.
+For an official upstream release, the Apple TV download contains an unsigned IPA, TV overlay, checksums and a build report.
 
-构建结果发布为实验性预发布，包含未签名 IPA、TV 覆盖层、校验文件和构建报告。
+上游正式版对应的 Apple TV 下载包含未签名 IPA、TV 覆盖层、校验文件和构建报告。
 
 To generate a new prepared package, run **Prepare TV input** with iOS/Mac prepared input JSON and a `data_input` recovery run ID, for example `{"recovery_run_id":"41077361816"}`. The recovery run must contain an available `tvos-shader-input` artifact.
 
@@ -49,3 +49,7 @@ Legacy 文件的大小及 SHA-256 应与构建报告一致。Data、Legacy 和 T
 **tvOS may purge Caches, including saves. Back up saves; cloud saving is not supported.**
 
 **tvOS 可能清理 Caches，包括存档。请备份存档；暂不支持云存档。**
+
+If a transfer stalls, record the tool, the step (signing, installation, container transfer or launch), and the exact error. For an exit after launch, include the Apple TV device log.
+
+若进度卡住，请记录工具、具体阶段（签名、安装、容器导入或启动）及完整报错。若在启动后退出，请附 Apple TV 设备日志。

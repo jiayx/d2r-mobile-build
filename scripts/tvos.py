@@ -79,7 +79,8 @@ def build():
     subprocess.run([str(python_dir / 'python3'), str(dm / 'tvos/gen_romfs_overlay.py'),
                     str(romfs), str(overlay)], env=environment, check=True)
     astc = overlay.with_name('romfs_overlay_astc')
-    if not (astc / 'data/.build.config').is_file() or not (astc / 'pack.json').is_file():
+    if (not (astc / 'data/.build.config').is_file()
+            or json.loads((astc / 'pack.json').read_text()) != info['legacy_pack']):
         raise ValueError('Required TV Legacy overlay was not generated')
     app = work / 'run/tvos/dd/Build/Products/Release-appletvos/DmTV.app'
     verify_app(app, ci.CONFIG)
@@ -113,6 +114,7 @@ def build():
     report = dict(platform='tvos', source_commit=ci.CONFIG['upstream_commit'],
                   app_version=ci.CONFIG['app_version'], minimum_os='26.0',
                   release_tag=tag, device_tested=False, signed=False,
+                  prepared_from_source=info['source_commit'], build_number=ci.CONFIG['build_number'],
                   game_program_layout='upstream embedded segments',
                   shader_chain=chain, metal_libraries=len(libs),
                   legacy_pack=info['legacy_pack'], packages=packages)
@@ -136,11 +138,14 @@ def publish():
                     '[Installation / 安装与资源导入](https://github.com/jiayx/d2r-mobile-build/blob/main/docs/TVOS.md)\n\n'
                     'Source: `' + report['source_commit'] + '`\n')
     repo, tag = os.environ['GITHUB_REPOSITORY'], report['release_tag']
+    source_release = release_info(os.environ['SOURCE_REPOSITORY'], ci.build_label())
+    preview = not source_release or source_release['draft'] or source_release['prerelease']
     if release_info(repo, tag) is None:
         gh('release', 'create', tag, '--repo', repo, '--target', os.environ['GITHUB_SHA'],
-           '--title', tag + ' (experimental)', '--notes-file', body, '--draft', '--prerelease')
+           '--title', ci.build_label() + ' · Apple TV build ' + ci.CONFIG['build_number'],
+           '--notes-file', body, '--draft')
     upload_verified(repo, tag, [*paths, out / 'TV-SHA256SUMS.txt', out / 'tvos-build-report.json'])
-    gh('release', 'edit', tag, '--repo', repo, '--draft=false', '--prerelease', '--latest=false')
+    gh('release', 'edit', tag, '--repo', repo, '--draft=false', '--prerelease=' + str(bool(preview)).lower(), '--latest=false')
 
 
 if __name__ == '__main__':
