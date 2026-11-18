@@ -2,6 +2,10 @@ name: Mirror existing resource Releases
 on:
   workflow_dispatch:
     inputs:
+      resource_manifest:
+        description: Short-lived source asset manifest (read from event, never logged)
+        type: string
+        default: ''
       publish:
         description: Copy missing verified assets and publish resource Releases
         type: boolean

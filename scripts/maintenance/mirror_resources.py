@@ -5,6 +5,8 @@ import os
 from pathlib import Path
 import subprocess
 import sys
+import urllib.request
+from urllib.parse import urlparse
 
 SOURCE = 'jiayx/d2r-mobile-build-test'
 TARGET = 'jiayx/d2r-mobile-build'
@@ -35,11 +37,23 @@ def digest(path):
 
 
 def main():
-    sources = [json.loads(gh('api', f'repos/{SOURCE}/releases/tags/{tag}', source=True)) for tag in TAGS]
+    event = json.loads(Path(os.environ['GITHUB_EVENT_PATH']).read_text())
+    manifest = event.get('inputs', {}).get('resource_manifest', '')
+    sources = json.loads(manifest) if manifest else [
+        json.loads(gh('api', f'repos/{SOURCE}/releases/tags/{tag}', source=True)) for tag in TAGS]
+    if [r['tag_name'] for r in sources] != list(TAGS):
+        raise ValueError('Unexpected source resource release')
     for release in sources:
         if release['draft'] or not release['assets']:
             raise ValueError('Source resource release is incomplete')
         for a in release['assets']:
+            if Path(a['name']).name != a['name']:
+                raise ValueError('Invalid asset filename')
+            if manifest:
+                url = a['download_url']
+                if urlparse(url).scheme != 'https' or urlparse(url).hostname != 'release-assets.githubusercontent.com':
+                    raise ValueError('Unexpected download host')
+                print('::add-mask::' + url, flush=True)
             if a['state'] != 'uploaded' or not (a.get('digest') or '').startswith('sha256:'):
                 raise ValueError('Source asset lacks server checksum')
     print('Existing resource releases accessible; all source assets have server SHA-256', flush=True)
@@ -61,7 +75,15 @@ def main():
                 continue
             path = root / asset['name']
             if not path.exists():
-                gh('release', 'download', tag, '-R', SOURCE, '--pattern', asset['name'], '--dir', root, source=True)
+                if manifest:
+                    try:
+                        with urllib.request.urlopen(asset['download_url'], timeout=120) as response, path.open('wb') as output:
+                            while chunk := response.read(8 * 1024**2):
+                                output.write(chunk)
+                    except Exception:
+                        raise RuntimeError('Resource transfer failed; source URL omitted') from None
+                else:
+                    gh('release', 'download', tag, '-R', SOURCE, '--pattern', asset['name'], '--dir', root, source=True)
             if (path.stat().st_size, digest(path)) != identity:
                 raise ValueError('Downloaded asset checksum differs')
             gh('release', 'upload', tag, path, '-R', TARGET)
