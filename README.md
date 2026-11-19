@@ -2,8 +2,6 @@
 
 [English](README.md) | [简体中文](README.zh-CN.md)
 
-**Game resource downloads:** [Data (all 3 parts)](https://github.com/jiayx/d2r-mobile-build/releases/tag/data-3.3.94012-97a2ada74145114ff8364bdc51a756408ef0c6d332e58fefe68eb0ee2b7c4a31) · [Legacy Device Pack (A14–A16)](https://github.com/jiayx/d2r-mobile-build/releases/tag/legacy-3.3.94012-3e82ab6dec4dee197c05cfc558f60d794e62394f4d843c908c2b91837fa6f9ce)
-
 Build iOS and macOS apps from [d2r-mobile](https://github.com/jhaizhou-ops/d2r-mobile) source with GitHub Actions. Each run defaults to the latest official upstream Release and publishes to your private repository.
 
 ## Configure and build
