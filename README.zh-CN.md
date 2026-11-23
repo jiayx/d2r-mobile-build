@@ -119,6 +119,6 @@ IPA 携带 `com.apple.developer.kernel.increased-memory-limit` 的 ad-hoc 权限
 
 ## Apple TV（实验性）
 
-下载 [Apple TV 安装包](https://github.com/jiayx/d2r-mobile-build/releases/tag/v2.3.3-build.1.2-tvos)，或按[构建和安装说明](docs/TVOS.md)自行构建。面向第三代 Apple TV 4K（A15）、tvOS 26+，需要扩展手柄。未进行真机测试；存档位于系统可清理的 Caches。
+下载 [Apple TV 安装包](https://github.com/jiayx/d2r-mobile-build/releases/tag/v2.3.4-build.2.1-tvos)，或按[构建和安装说明](docs/TVOS.md)自行构建。面向第三代 Apple TV 4K（A15）、tvOS 26+，需要扩展手柄。未进行真机测试；存档位于系统可清理的 Caches。
 
 TV 预处理输入约 226 MB，下载链接见 TV 说明。

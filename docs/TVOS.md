@@ -1,8 +1,8 @@
 # Apple TV (experimental) / Apple TV（实验性）
 
-Requires **Apple TV 4K (3rd generation, A15), tvOS 26+**, and an Xbox / PlayStation / compatible gamepad. Siri Remote is not supported. Download the [Apple TV package](https://github.com/jiayx/d2r-mobile-build/releases/tag/v2.3.3-build.1.2-tvos). No physical-device testing.
+Requires **Apple TV 4K (3rd generation, A15), tvOS 26+**, and an Xbox / PlayStation / compatible gamepad. Siri Remote is not supported. Download the [Apple TV package](https://github.com/jiayx/d2r-mobile-build/releases/tag/v2.3.4-build.2.1-tvos). No physical-device testing.
 
-需要 **第三代 Apple TV 4K（A15）、tvOS 26+** 和 Xbox / PlayStation 等兼容手柄，不支持 Siri 遥控器。下载 [Apple TV 安装包](https://github.com/jiayx/d2r-mobile-build/releases/tag/v2.3.3-build.1.2-tvos)。未做真机测试。
+需要 **第三代 Apple TV 4K（A15）、tvOS 26+** 和 Xbox / PlayStation 等兼容手柄，不支持 Siri 遥控器。下载 [Apple TV 安装包](https://github.com/jiayx/d2r-mobile-build/releases/tag/v2.3.4-build.2.1-tvos)。未做真机测试。
 
 ## Build / 构建
 

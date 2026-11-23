@@ -119,6 +119,6 @@ Reuse your existing Mac prepared input configuration when updating. If the workf
 
 ## Apple TV (experimental)
 
-Download the [Apple TV package](https://github.com/jiayx/d2r-mobile-build/releases/tag/v2.3.3-build.1.2-tvos) or see [build and installation instructions](docs/TVOS.md). It targets Apple TV 4K (3rd generation, A15), tvOS 26+, and an extended gamepad. No physical-device testing; saves are stored in purgeable Caches.
+Download the [Apple TV package](https://github.com/jiayx/d2r-mobile-build/releases/tag/v2.3.4-build.2.1-tvos) or see [build and installation instructions](docs/TVOS.md). It targets Apple TV 4K (3rd generation, A15), tvOS 26+, and an extended gamepad. No physical-device testing; saves are stored in purgeable Caches.
 
 The TV prepared input (about 226 MB) is linked in the TV guide.
