@@ -13,6 +13,11 @@ SCRIPTS = ('dm/tools/patch_nso.py', 'dm/tools/guest_dylib.py',
 # Reviewed generator revisions that can consume the same prepared output.
 # Keep exact content hashes: an unrelated edit must still require new inputs.
 COMPATIBLE_GENERATORS = {
+    # Translator failure diagnostics changed; shader-chain header generation is unchanged.
+    'dm/gfx/tools/dmsh_chain.py': {
+        '1af7bca12c4edab58103988fb5c89326da1b63ce5dded4c4d7548aa5f50cd795',
+        '5ff010000dbce5db5b9daff49f2a3e87816b44388545448737fe81d408bd02da',
+    },
     # Copy/validate reflections; imported packages already verify every library's JSON.
     'dm/gfx/tools/msl_retarget.sh': {
         'ec41dab53626ed1499854c39c9d308c02438a3e47c30a07f135b38165f074f72',
