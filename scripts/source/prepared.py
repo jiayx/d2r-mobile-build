@@ -15,7 +15,7 @@ import ci
 from archive_input import extract, MAX_EXPANDED_BYTES as MAX_PACKAGE_BYTES
 from input_config import download_file, input_identity, settings
 from source.metal import verify_payload
-from source.compatibility import verify_generation
+from source.compatibility import prepared_chain_header, verify_generation
 
 GENERATED = ('host/dm_vault_tab.h', 'host/dm_hud_exp.h', 'host/dm_bright_levels.inc')
 
@@ -88,7 +88,7 @@ def verify_source(directory, info, upstream, config):
         raise ValueError('Selected source requires a different prepared game product')
     verify_generation(upstream, info['producer']['source_commit'])
     shutil.copy2(directory / 'shader-chain.lock', dm / 'gfx/tools/dmsh_chain.lock')
-    chain = subprocess.check_output([sys.executable, str(dm / 'gfx/tools/dmsh_chain.py'), '--header'], text=True).strip()
+    chain = prepared_chain_header(upstream, info['producer']['source_commit'])
     if chain != info['payload']['shader_chain']:
         raise ValueError('Selected source shader chain differs; supply an updated prepared package')
 

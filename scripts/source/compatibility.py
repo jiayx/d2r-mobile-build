@@ -5,6 +5,7 @@ from pathlib import Path
 import posixpath
 import re
 import subprocess
+import sys
 
 ROOTS = ('dm/PRODUCT', 'dm/tools/product.sh', 'dm/gfx/tools/msl_retarget.sh')
 SCRIPTS = ('dm/tools/patch_nso.py', 'dm/tools/guest_dylib.py',
@@ -132,3 +133,23 @@ def verify_generation(upstream, baseline):
     if affected:
         raise ValueError('Selected source changed generation inputs (' + ', '.join(affected[:5]) +
                          '); supply an updated prepared package')
+
+
+def prepared_chain_header(upstream, baseline):
+    """Generate the header for a verified prepared chain, retaining current source."""
+    upstream = Path(upstream)
+    name = 'dm/gfx/tools/dmsh_chain.py'
+    path = upstream / name
+    current = path.read_bytes()
+    original = git(upstream, 'show', baseline + ':' + name).encode()
+    if current != original:
+        allowed = COMPATIBLE_GENERATORS[name]
+        if hashlib.sha256(current).hexdigest() not in allowed or hashlib.sha256(original).hexdigest() not in allowed:
+            raise ValueError('Selected source shader chain script requires a new prepared package')
+    try:
+        if current != original:
+            path.write_bytes(original)
+        return subprocess.check_output([sys.executable, str(path), '--header'], text=True).strip()
+    finally:
+        if current != original:
+            path.write_bytes(current)

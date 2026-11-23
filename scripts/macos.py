@@ -249,7 +249,8 @@ def build():
                                   headers=cache / 'generated', baseline=info['source_commit'])
     shutil.copyfile(cache / 'shader-chain.lock', dm / 'gfx/tools/dmsh_chain.lock')
     shutil.copyfile(cache / 'c1_full.tsv', dm / 'gfx/nvn/c1_full.tsv')
-    if run(sys.executable, dm / 'gfx/tools/dmsh_chain.py', '--header') != info['shader_chain']:
+    from source.compatibility import prepared_chain_header
+    if prepared_chain_header(root / 'upstream', info['source_commit']) != info['shader_chain']:
         raise ValueError('Mac shader chain differs from the selected source')
     product = workspace / 'build/cache/dm/out' / (info['product'] + '-touch')
     shutil.rmtree(product, ignore_errors=True)
